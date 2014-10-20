@@ -1,0 +1,49 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter name="show-title" label="Show title" type="boolean" default="true">
+Define if the frame title is shown.
+Default value is true.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="panel-type" label="Panel Type" type="enum" default="default" values="default|primary|success|info|warning|danger">
+Define a custom css class on the frame.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Collapsible" name="collapsible" type="boolean" default="false">
+Defines if the frame is collapsible or not.
+Allowed values are: true or false (default).
+</wr:LayoutParameter>
+<wr:LayoutParameter name="frame-class" label="Frame class" type="string">
+Define a custom css class on the frame.
+</wr:LayoutParameter>
+[% setHTMLOutput() 
+	def collapsible = params["collapsible"] == "true"
+	def hash = cell.hashCode()
+	def firstChild = cell.selectSingleNode('layout:Unit|layout:Field|layout:Link|layout:Attribute|layout:Grid|layout:SubPage')
+%]
+<div class="panel panel-[%=params["panel-type"]%] [%=params["frame-class"]%]">
+[% if (params["show-title"] == "true") { %]
+	<div class="panel-heading clearfix">
+		[% if (firstChild) { %]
+		<div class="btn-group btn-group-sm pull-right">
+          [% if (firstChild.getName() == "Unit") { %]
+            <wr:Iterate var="link" context="firstChild" select="layout:Link">
+              <wr:Link type="button"/>
+            </wr:Iterate>
+          [% } else if (firstChild.getName() == "Link") { %]
+            <wr:Link type="button" context="firstChild"/>
+          [% } %]
+        </div>
+        [% } %]
+		<h2 class="panel-title">
+		[% if (collapsible) { %]<a class="accordion-toggle" data-toggle="collapse" href="#panel-[%= hash %]">[% } %]
+			<wr:Label context="cell"/>
+		[% if (collapsible) { %]</a>[% } %]
+		</h2>
+	</div>
+[% } %]
+	[% if (collapsible) { %]<div id="panel-[%= hash %]" class="panel-collapse collapse in">[% } %]
+	<div class="panel-body">
+		<wr:Iterate var="cellElem" context="cell" select="(layout:Unit|layout:Field|layout:Link|layout:Attribute|layout:Grid|layout:SubPage)[position() > 1]">
+			<wr:Element/>
+		</wr:Iterate>
+	</div>
+	[% if (collapsible) { %]</div>[% } %]
+</div>

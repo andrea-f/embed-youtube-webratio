@@ -1,0 +1,93 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter name="button-group" label="Button group" type="boolean" default="false">
+Wrap the buttons.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Label Position" name="show-label" type="enum" values="top|left|false" default="left">
+Position of the field label in relation to the field itself. 
+Allowed values are:
+- left (default): label on the left side of the field,
+- top: label just above the field,
+- false: label not shown.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Label width" name="label-width" type="enum" default="2" values="1|2|3|4|5|6|7|8">
+Grid width of the field label.
+Used when placing labels on left, in order to visually align fields.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Show Mandatory Fields" name="mandatory-fields" type="boolean" default="false">
+Defines whether to show a '*' for mandatory fields or not.
+Allowed values are: true or false(default).
+</wr:LayoutParameter>
+[%import org.apache.commons.lang.math.NumberUtils
+
+setHTMLOutput()
+def unitId = unit["id"]
+def links = unit.selectNodes("layout:Link")
+def buttonGroup = params["button-group"]
+def labelPosition = params["show-label"]
+def labelWidth = NumberUtils.toInt(params["label-width"])
+def hasFields = !unit.selectNodes("layout:Field").isEmpty()
+%]
+<wr:Frame>
+<div class="EntryUnit <wr:StyleClass/>">
+	[%if(unit["entity"] != ""){%]<html:hidden property="<wr:Id context="unit"/>Key" styleId="<wr:Id context="unit"/>Key"></html:hidden>[%}%]
+	[% // prints hidden fields, which do not have associated layout:Field elements
+	  for (hiddenField in getById(unit["id"])?.selectNodes("Field[@hidden = 'true']")) {
+	    def type = hiddenField["type"]
+	    if (type == "blob") { %]
+		<html:hidden property="[%=hiddenField["id"]%]_preload"/>
+	[%  } else { %]
+		<html:hidden property="[%=hiddenField["id"]%]" styleId="[%=hiddenField["id"]%]"/>
+	[%  }
+	  } 
+	%]
+	[% if (hasFields) { %]
+	<div class="[% if (labelPosition == 'left') { %]form-horizontal [% } %]">
+	    <c:set var="btFieldError"><html:errors property="<wr:Id context="unit"/>"/></c:set>
+		<c:if test="${not (empty btFieldError)}">
+			<div class="alert alert-danger alert-dismissable">
+				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+				<html:errors property="<wr:Id context="unit"/>"/>
+			</div>
+		</c:if>
+		
+		<wr:Iterate var="field" context="unit" select="layout:Field">
+			<wr:Visible>
+				[% def fieldType = getById(field["field"])?.name 
+					def type = field["type"]
+					def subType = getById(field["subType"])
+					def typeId = type
+					if(subType != null){
+					  typeId = subType["id"]
+					  type = subType["type"]
+					}
+					def plain = getById(field["field"])?.name == "Field"
+					def fieldProp = field["field"] + ((isLocalizedType(type) && plain) ? "_locale" : "")%]
+				<c:set var="btFieldError"><html:errors property="[%=fieldProp%]"/></c:set>
+				<div class="form-group<c:if test="${not (empty btFieldError)}"> has-error</c:if> <wr:StyleClass context="field"/>">
+					[% if (labelPosition != "false") { %]
+					  <label for="[%=fieldProp%]" class="control-label[%= (labelPosition == "left") ? (" col-md-" + labelWidth) : "" %]"><wr:Label/>[% if (params["mandatory-fields"] == "true" && isMandatoryField(field)) { %] *[% } %]</label>
+					[% } %]
+					<div class="controls[%= (labelPosition == "left") ? (" col-md-" + (12-labelWidth)) : "" %]">
+					<wr:Value/>
+					<wr:FieldError/>
+					</div>
+				</div>
+			</wr:Visible>
+		</wr:Iterate>
+	</div>
+	[% } %]
+	[% if (!links.isEmpty()) { %]
+	[% if ( hasFields && labelPosition == "left" ) { %]<div class="row"><div class="col-md-offset-[%= labelWidth %] col-md-[%= (12-labelWidth) %]">[% } %]
+		<div class="form-group form-btn">
+			[% if (buttonGroup == "true") { %]<div class="btn-group">[% } %]
+			<wr:Iterate var="link" context="unit" select="layout:Link">
+				<wr:Visible>
+					<wr:Link type="button"/> 
+				</wr:Visible>
+			</wr:Iterate>
+			[% if (buttonGroup == "true") { %]</div>[% } %]
+		</div>
+	[% if (hasFields && labelPosition == "left") { %]</div></div>[% } %]
+	[% } %]
+</div>	
+</wr:Frame>

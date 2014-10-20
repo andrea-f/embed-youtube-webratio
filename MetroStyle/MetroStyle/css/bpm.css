@@ -1,0 +1,126 @@
+/*
+ * Style for BPM Elements
+ */
+.ProcessUnit .alert-outdated {
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+  color: #8a6d3b;
+  border: 0;
+}
+.ProcessUnit .alert-outdated hr {
+  border-top-color: #f7e1b5;
+}
+.ProcessUnit .alert-outdated .alert-link {
+  color: #66512c;
+}
+.ProcessUnit .alert-updated {
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+  color: #3c763d;
+  border: 0;
+}
+.ProcessUnit .alert-updated hr {
+  border-top-color: #c9e2b3;
+}
+.ProcessUnit .alert-updated .alert-link {
+  color: #2b542c;
+}
+.ProcessUnit .alert-invalid {
+  background-color: #f2dede;
+  border-color: #ebccd1;
+  color: #a94442;
+  border: 0;
+}
+.ProcessUnit .alert-invalid hr {
+  border-top-color: #e4b9c0;
+}
+.ProcessUnit .alert-invalid .alert-link {
+  color: #843534;
+}
+.ProcessUnit .table > thead > tr > td.status-updated,
+.ProcessUnit .table > tbody > tr > td.status-updated,
+.ProcessUnit .table > tfoot > tr > td.status-updated,
+.ProcessUnit .table > thead > tr > th.status-updated,
+.ProcessUnit .table > tbody > tr > th.status-updated,
+.ProcessUnit .table > tfoot > tr > th.status-updated,
+.ProcessUnit .table > thead > tr.status-updated > td,
+.ProcessUnit .table > tbody > tr.status-updated > td,
+.ProcessUnit .table > tfoot > tr.status-updated > td,
+.ProcessUnit .table > thead > tr.status-updated > th,
+.ProcessUnit .table > tbody > tr.status-updated > th,
+.ProcessUnit .table > tfoot > tr.status-updated > th {
+  background-color: #d9edf7;
+}
+.ProcessUnit .table-hover > tbody > tr > td.status-updated:hover,
+.ProcessUnit .table-hover > tbody > tr > th.status-updated:hover,
+.ProcessUnit .table-hover > tbody > tr.status-updated:hover > td,
+.ProcessUnit .table-hover > tbody > tr.status-updated:hover > th {
+  background-color: #c4e3f3;
+}
+.ProcessUnit .table > thead > tr > td.status-new,
+.ProcessUnit .table > tbody > tr > td.status-new,
+.ProcessUnit .table > tfoot > tr > td.status-new,
+.ProcessUnit .table > thead > tr > th.status-new,
+.ProcessUnit .table > tbody > tr > th.status-new,
+.ProcessUnit .table > tfoot > tr > th.status-new,
+.ProcessUnit .table > thead > tr.status-new > td,
+.ProcessUnit .table > tbody > tr.status-new > td,
+.ProcessUnit .table > tfoot > tr.status-new > td,
+.ProcessUnit .table > thead > tr.status-new > th,
+.ProcessUnit .table > tbody > tr.status-new > th,
+.ProcessUnit .table > tfoot > tr.status-new > th {
+  background-color: #fcf8e3;
+}
+.ProcessUnit .table-hover > tbody > tr > td.status-new:hover,
+.ProcessUnit .table-hover > tbody > tr > th.status-new:hover,
+.ProcessUnit .table-hover > tbody > tr.status-new:hover > td,
+.ProcessUnit .table-hover > tbody > tr.status-new:hover > th {
+  background-color: #faf2cc;
+}
+.ProcessUnit .table > thead > tr > td.status-outdaded,
+.ProcessUnit .table > tbody > tr > td.status-outdaded,
+.ProcessUnit .table > tfoot > tr > td.status-outdaded,
+.ProcessUnit .table > thead > tr > th.status-outdaded,
+.ProcessUnit .table > tbody > tr > th.status-outdaded,
+.ProcessUnit .table > tfoot > tr > th.status-outdaded,
+.ProcessUnit .table > thead > tr.status-outdaded > td,
+.ProcessUnit .table > tbody > tr.status-outdaded > td,
+.ProcessUnit .table > tfoot > tr.status-outdaded > td,
+.ProcessUnit .table > thead > tr.status-outdaded > th,
+.ProcessUnit .table > tbody > tr.status-outdaded > th,
+.ProcessUnit .table > tfoot > tr.status-outdaded > th {
+  background-color: #fcf8e3;
+}
+.ProcessUnit .table-hover > tbody > tr > td.status-outdaded:hover,
+.ProcessUnit .table-hover > tbody > tr > th.status-outdaded:hover,
+.ProcessUnit .table-hover > tbody > tr.status-outdaded:hover > td,
+.ProcessUnit .table-hover > tbody > tr.status-outdaded:hover > th {
+  background-color: #faf2cc;
+}
+.ProcessUnit .table > thead > tr > td.status-invalid,
+.ProcessUnit .table > tbody > tr > td.status-invalid,
+.ProcessUnit .table > tfoot > tr > td.status-invalid,
+.ProcessUnit .table > thead > tr > th.status-invalid,
+.ProcessUnit .table > tbody > tr > th.status-invalid,
+.ProcessUnit .table > tfoot > tr > th.status-invalid,
+.ProcessUnit .table > thead > tr.status-invalid > td,
+.ProcessUnit .table > tbody > tr.status-invalid > td,
+.ProcessUnit .table > tfoot > tr.status-invalid > td,
+.ProcessUnit .table > thead > tr.status-invalid > th,
+.ProcessUnit .table > tbody > tr.status-invalid > th,
+.ProcessUnit .table > tfoot > tr.status-invalid > th {
+  background-color: #f2dede;
+}
+.ProcessUnit .table-hover > tbody > tr > td.status-invalid:hover,
+.ProcessUnit .table-hover > tbody > tr > th.status-invalid:hover,
+.ProcessUnit .table-hover > tbody > tr.status-invalid:hover > td,
+.ProcessUnit .table-hover > tbody > tr.status-invalid:hover > th {
+  background-color: #ebcccc;
+}
+.ProcessUnit .table ul {
+  margin-bottom: 0;
+}
+.ProcessUnit .text-danger ul,
+.ProcessUnit .text-danger li {
+  display: inline;
+}

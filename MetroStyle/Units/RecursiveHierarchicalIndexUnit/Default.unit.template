@@ -1,0 +1,143 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter label="Show Header" name="show-header" type="boolean" default="true">
+Defines the rendition of the header on the top.
+Allowed values are: true (default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use Alternate Rows" name="use-alternate" type="boolean" default="true">
+Defines the usage of alternates colours for each line.
+Allowed values are: true or false(default).
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Compact table" name="compact" type="boolean" default="false">
+Makes tables more compact by cutting cell padding in half.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Links Position" name="link-position" type="enum" values="left|right|on_row" default="right">
+Defines the rendition of the sub levels links.
+Allowed values are:
+- right (default): places the links on the right
+- left: places the links on the left
+- on_row: places the first link on the attributes
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use Empty Unit Message" name="use-empty-unit-message" type="boolean" default="false">
+Defines the usage of a message for empty units.
+Allowed values are: true(default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Empty Unit Message" name="empty-unit-message" type="string" default="emptyUnitMessage">
+Defines the key of the message to use if the unit is empty.
+Default value: emptyUnitMessage
+</wr:LayoutParameter>
+[% 
+setHTMLOutput()
+ 
+def unitId = unit["id"]
+
+def links = unit.selectNodes("layout:Link")
+def unitLink = links.empty ? null : links[0]
+def myIndex = unit.hashCode()
+
+def showHeader = params["show-header"]
+def useAlternate = params["use-alternate"]
+def compact = params["compact"]
+def linkPosition = params["link-position"]
+def useEmptyUnitMessage = params["use-empty-unit-message"]
+def emptyUnitMessage = params["empty-unit-message"]
+
+%]
+
+[% if (useEmptyUnitMessage != "true") { %]
+<c:if test="${not(empty <wr:Id context="unit"/>) and (<wr:Id context="unit"/>.dataSize gt 0)}">
+[% } else { %]
+<c:choose>
+<c:when test="${not(empty <wr:Id context="unit"/>) and (<wr:Id context="unit"/>.dataSize gt 0)}">
+[% } %]
+<wr:Frame>
+	<div class="plain <wr:StyleClass/>">
+		<div class="plain RecursiveHierachicalIndexUnit">
+			<div class="table-responsive">
+				<table class="table table-bordered table-hover [% if (compact == "true") { %] table-condensed[% } %][% if (useAlternate == "true") { %] table-striped[% } %]">
+					[% if (showHeader == "true") {%]
+					<thead>
+						<tr>
+						[% if (linkPosition == "left") { %]
+							<wr:Iterate var="l" context="unit" select="layout:Link[string(@_exp) != 't']">
+								<wr:Visible><th scope="col" class="<wr:StyleClass/> smallcol"></th></wr:Visible>
+							</wr:Iterate>
+						[% }  %]
+						<wr:Iterate var="att" context="unit" select="layout:Attribute">
+						<wr:Visible>
+					        <th scope="col" class="<wr:StyleClass/>">
+						     	<wr:Label/>
+					        </th>
+					    </wr:Visible>
+					    </wr:Iterate>
+						<wr:Iterate var="l" context="unit" select="layout:Link[string(@_exp) != 't']">
+							[% if (linkPosition == "right" || ((linkPosition == "on_row") && index > 0)) { %]
+								<wr:Visible><th scope="col" class="<wr:StyleClass/> smallcol"></th></wr:Visible>
+							[% } %]
+						</wr:Iterate>	
+						</tr>
+					</thead>
+					[% } %]
+					<tbody>
+					<c:forEach var="current" varStatus="status" items="${<wr:Id context="unit"/>.data}">
+					<c:set var="index" value="${status.index}"/>	
+						<tr <c:if test="${current.isCurrent}">class="info"</c:if>>	
+							[% if (linkPosition == "left") { %]
+								<wr:Iterate var="l" context="unit" select="layout:Link[string(@_exp) != 't']">
+								<wr:Visible>
+									<td class="<wr:StyleClass/> smallcol">
+										<wr:Link/>
+									</td>
+								</wr:Visible>
+								</wr:Iterate>
+							[% } %]
+							<wr:Iterate var="attr" context="unit" select="layout:Attribute">
+							<wr:Visible>
+								<td class="<wr:StyleClass/> [%=attr["type"]%]">
+								[% if (index == 0) { %]<div style="margin-left: ${current.level}em;">[% } %]
+									[% if ((linkPosition == "on_row") && (!links.empty)) {%]
+										<wr:Visible position="'index'">
+											<wr:Visible context="unitLink" position="'index'">
+												<a href="<wr:URL context="unitLink"/>" class="<wr:StyleClass context="unitLink"/>" onclick="<wr:AjaxURL context="unitLink" />">
+											</wr:Visible>
+											<wr:Value/>
+											<wr:Visible context="unitLink" position="'index'">
+												</a>
+											</wr:Visible>
+										</wr:Visible>
+									[% } else {%]
+										<wr:Value/>
+									[% } %]
+								[% if (index == 0) { %]</div>[% } %]
+								</td>
+							</wr:Visible>
+							</wr:Iterate>
+						   <wr:Iterate var="l" context="unit" select="layout:Link[string(@_exp) != 't']">
+							   	[% if (linkPosition == "right" || (linkPosition == "on_row" && index > 0)) { %]
+							   	<wr:Visible>
+							   		<td class="<wr:StyleClass/> smallcol">
+										<wr:Link/>
+									</td>
+								</wr:Visible>
+								[% } %]
+						   </wr:Iterate>
+						</tr>
+					</c:forEach>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</wr:Frame>  
+[% if (useEmptyUnitMessage != "true") { %]
+</c:if>
+[% } else { %]
+</c:when>
+<c:otherwise>
+	<wr:Frame>
+		<div class="alert alert-info empty-message <wr:StyleClass/>">
+			<bean:message key="[%printJSPTagValue(emptyUnitMessage)%]"/>
+		</div>
+	</wr:Frame>
+</c:otherwise>
+</c:choose>
+[% } %]

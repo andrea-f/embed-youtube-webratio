@@ -1,0 +1,26 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter name="panel-type" label="Panel Type" type="enum" default="default" values="default|primary|success|info|warning|danger">
+Define a custom css class on the panel.
+</wr:LayoutParameter>
+[%setHTMLOutput()%]
+<div class="panel-group" id="accordions_[%= getLayoutId(cell) %]">
+<wr:Iterate var="cellElem" context="cell" varIndex="index" select="layout:Unit|layout:Field|layout:Link|layout:Attribute|layout:Grid|layout:SubPage">
+	[% def elem = (cellElem.getQualifiedName() == "layout:Grid" && "cell".equals(cellElem.attributeValue("containerType"))) ? cellElem.selectSingleNode("layout:Row/layout:Cell") : cellElem %]
+	<wr:Visible context="cellElem">
+	<div class="panel panel-[%= params["panel-type"] %]">
+	    <div class="panel-heading">
+	      <h4 class="panel-title">
+	        <a data-toggle="collapse" data-parent="#accordions_[%= getLayoutId(cell) %]" href="#collapse_[%= getLayoutId(cellElem) %]">
+	          <wr:Label context="elem"/>
+	        </a>
+	      </h4>
+	    </div>
+	    <div id="collapse_[%= getLayoutId(cellElem) %]" class="panel-collapse collapse[% if (index == 0) { %] in[% } %]">
+	      <div class="panel-body">
+	        <wr:Element/>
+	      </div>
+	    </div>
+	</div>
+	</wr:Visible>
+</wr:Iterate>
+</div>

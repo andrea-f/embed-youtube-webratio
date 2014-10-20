@@ -1,0 +1,49 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter label="Message Type" name="messageType" values="warning|danger|success|info" type="enum" default="info">
+Defines the type of the message.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Content Type" name="contentType" values="text/plain|text/html" type="enum">
+Defines the type of content of the message to escape it, if necessary.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="message-localized" label="Message localized" type="boolean" default="false">
+Defines if the message is localized (only for untyped message)
+</wr:LayoutParameter>
+<wr:LayoutParameter name="message-dismissable" label="Message dismissable" type="boolean" default="false">
+Defines if the message is dismissable.
+</wr:LayoutParameter>
+[%
+setHTMLOutput()
+def unitId = unit["id"]
+def contentType = params["contentType"]
+def messageType = params["messageType"]
+def messageLocalized = new Boolean(params["message-localized"])
+def messageDismissable = new Boolean(params["message-dismissable"])
+%]
+<c:if test="${not(empty <wr:Id context="unit"/>) and (<wr:Id context="unit"/>.dataSize gt 0)}">
+	<div class="alert[%= (messageDismissable) ? " alert-dismissable fade in" : "" %] alert-[%= messageType %] <wr:StyleClass/>">
+		[% if (messageDismissable) { %]<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>[% } %]
+		<c:forEach var="current" varStatus="status" items="${<wr:Id context="unit"/>.data}">
+			<c:set var="index" value="${status.index}"/>
+			[% if (contentType == "text/plain") { %]
+				<pre class="<wr:StyleClass/> value"><c:out value="${current}"/></pre>
+			[% } else if (contentType == "text/html") { %]
+				<c:out value="${current}" escapeXml='false'/>
+			[% } else { %]<p>
+				[% if (messageLocalized) { %]
+					<bean:message key="${current}"/>
+				[%} else {%]
+					<c:out value="${current}"/>
+				[%}%]</p>
+			[% } %]
+		</c:forEach>
+		[%if(!unit.selectNodes("layout:Link").isEmpty()){%]
+		<p>
+			<wr:Iterate var="link" context="unit" select="layout:Link">
+				<wr:Visible>
+					<wr:Link/>
+				</wr:Visible>
+			</wr:Iterate>
+		</p>
+		[%}%]
+	</div>
+</c:if>

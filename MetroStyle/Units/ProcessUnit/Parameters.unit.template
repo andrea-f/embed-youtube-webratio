@@ -1,0 +1,59 @@
+#?delimiters [%, %], [%=, %]
+[%
+def localized = isLocalizedAncestorOrSelf(unit)
+%]
+<c:if test="${not(empty <wr:Id context="unit"/>) and (<wr:Id context="unit"/>.dataSize gt 0)}">
+<wr:Frame>
+ <div class="plain <wr:StyleClass/>">
+	<div class="plain ProcessUnit">
+      	<c:forEach var="current" varStatus="status" items="${<wr:Id context="unit"/>.data}">
+           <c:set var="index" value="${status.index}"/>    
+           <c:set var="type" value="${current.type}"/>
+           <c:set var="typePattern" value="${type}Pattern"/>
+           <div class="row">
+           	<label class="header col-md-3">
+       		[% if (localized) { %]<bean:message key="${current.name}"/>[%
+			} else { %]<c:out value="${current.name}"/>[% } %]
+           	</label>
+           	<div class="value col-md-9 ${type}">
+	           <c:forEach var="value" varStatus="vStatus" items="${current.values}">
+	                <c:choose>
+	                   <c:when test="${type eq 'boolean'}">
+	                      <c:choose>
+	                        <c:when test="${value}"><bean:message key="${type}.yes"/></c:when>
+	                        <c:otherwise><bean:message key="${type}.no"/></c:otherwise>
+	                      </c:choose>
+	                   </c:when>
+	                   <c:when test="${type eq 'date' or type eq 'time' or type eq 'timestamp'}">
+	                     <fmt:formatDate value="${value}" pattern="${pageScope[typePattern]}"/>
+	                   </c:when>
+	                   <c:when test="${type eq 'integer' or type eq 'float' or type eq 'decimal'}">
+	                     <fmt:formatNumber value="${value}" pattern="${pageScope[typePattern]}"/>
+	                   </c:when>
+	                   <c:when test="${type eq 'blob'}">
+	                     <c:if test="${not (empty value)}">
+	                       <a target="_blank" border="0" href="<webratio:BLOB value="${value}"/>"><c:out value="${value.name}"/></a>
+	                     </c:if>
+	                   </c:when>
+	                   <c:when test="${type eq 'url'}">
+	                     <c:if test="${not(empty value)}">
+	                       <a target="_blank" href="<c:out value="${value}"/>"><c:out value="${value}"/></a>
+	                     </c:if>
+	                   </c:when>
+	                   <c:when test="${type eq 'text'}">
+	                     <c:out value="${value}"/>
+	                   </c:when>
+	                   <c:when test="${current.hasCases}">
+	                     [%if(localized && isBpmLocalizedModel()){%]<bean:message key="${value}"/>[%}else{%]<c:out value="${value}"/>[%}%]
+	                   </c:when>
+	                   <c:otherwise><c:out value="${value}"/></c:otherwise>
+	                </c:choose>
+	                <c:if test="${not vStatus.last}">&nbsp;</c:if>
+	            </c:forEach>
+            </div>
+           </div>
+        </c:forEach>
+	</div>
+ </div>	
+</wr:Frame>
+</c:if>

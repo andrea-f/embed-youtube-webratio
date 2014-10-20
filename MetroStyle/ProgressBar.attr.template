@@ -1,0 +1,118 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter label="Label Position" name="label-position" type="enum" values="top|left|none" default="left">
+Position of the attribute label in relation to the attribute itself. 
+Allowed values are:
+- left (default): label on the left side of the attribute,
+- top: label just above the attribute,
+- none: label not shown.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Label width" name="label-width" type="enum" default="2" values="1|2|3|4|5|6|7|8">
+Grid width of the attribute label.
+Used when placing labels on left, in order to visually align attributes.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="min-value" label="Min value" type="string" default="0">
+Define the min value for the progress bar
+</wr:LayoutParameter>
+<wr:LayoutParameter name="max-value" label="Max value" type="string" default="100">
+Define the max value for the progress bar
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Progress bar style" name="progress-bar-style" type="enum" values="default|info|success|warning|danger" default="default">
+Defines the color style of the progress bar. 
+Allowed values are:
+- default (default)
+- info
+- success
+- warning
+- danger
+</wr:LayoutParameter>
+<wr:LayoutParameter name="striped" label="Striped" type="boolean" default="false">
+Define if uses a gradient to create a striped effect.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="animated" label="Animated" type="boolean" default="false">
+Define if animate the stripes right to left (Striped parameter must be set to true).
+</wr:LayoutParameter>
+[%import org.apache.commons.lang.math.NumberUtils
+import org.apache.commons.lang.StringUtils
+
+def type = attr["type"]
+def subType = attr["subType"]
+def contentType = attr["contentType"]
+def typeId = (subType != "") ? subType : type
+def pattern = typeId + "Pattern"
+def attrProp = getFieldName(attr["attribute"])
+
+def labelPosition = params["label-position"]
+def labelWidth = NumberUtils.toInt(params["label-width"])
+def minValue = params["min-value"]
+def maxValue = params["max-value"]
+def barStyle = (params["progress-bar-style"] != "default") ? " progress-bar-" + params["progress-bar-style"] : ""
+def striped = Boolean.valueOf(params["striped"])
+def animated = striped && Boolean.valueOf(params["animated"])
+def stripedStyle = (striped) ? " progress-striped" : ""
+stripedStyle += (animated) ? " active" : ""
+
+if (!NumberUtils.isNumber(minValue) || !NumberUtils.isNumber(maxValue)) {
+	throwGenerationException("Min value and max value must be valid numbers.")
+}
+
+def iconsExtensions = params["use-icon-extensions"]
+def folder = params["icon-folder"] + "/"
+def extension = "." + params["icon-extension"]
+if (iconsExtensions == "true") { 
+	def tokens = StringUtils.splitPreserveAllTokens(image, "|");		
+	if (tokens.length > 1) {
+		folder = tokens[0]
+		if (folder == "") {
+			folder = params["icon-folder"] + "/"
+		} else {
+			if (folder.startsWith(File.separator)) {
+	           folder = StringUtils.substringAfter(folder, File.separator)
+	        }
+			if (!folder.endsWith(File.separator)) {
+	           folder = folder + File.separator;
+	        }
+	    }	     
+	    folder = StringUtils.replace(folder, File.separator, "/")
+		extension = tokens[1]
+		if (extension == "") {
+			extension = "." + params["icon-extension"]
+		} else {
+			if (!extension.startsWith(".")) {
+	           extension = "." + extension
+	        }
+		}
+	}	
+}
+
+def printAttrMode = { mode ->
+	def templateFile = getElementLayoutFile(getAttributeLayout(attr).path, ".attr.template")
+	printRaw(executeTemplate(templateFile.absolutePath, [ attr: attr, mode: mode, styleClass: styleClass ]));
+}
+
+if (mode == "full") { %]
+<div class="[% if (labelPosition == "left") { %]row[% } %] <wr:StyleClass/>">
+	[% if (labelPosition != "none") { %]<div class="labelWrapper[%= (labelPosition == "left") ? (" col-md-" + labelWidth) : "" %]">[% printAttrMode("label") %]</div>[% } %]
+	<div class="[%= (labelPosition == "left") ? (" col-md-" + (12-labelWidth)) : "" %]">[% printAttrMode("value") %]</div>
+</div>
+
+[% } else {
+
+if (mode == "value") { %]
+	
+[% } %]
+[% if (mode == "label") { %]
+	<label class="<wr:StyleClass context="attr"/> header"><wr:Label context="attr"/></label>
+[% } else if ((type == "float") || (type == "integer") || (type == "decimal")) { %]
+	<fmt:formatNumber var="progressPercentage" value="${([%=item%].[%=attrProp%] - [%= minValue %]) / [%= maxValue %]}" type="PERCENT"/>
+	<div class="progress[%= stripedStyle %] <wr:StyleClass context="attr"/>">
+	  <div class="progress-bar [%= barStyle %]" role="progressbar" aria-valuenow="<fmt:formatNumber value="${[%=item%].[%=attrProp%]}" pattern="${[%=pattern%]}"/>" aria-valuemin="[%= minValue %]" aria-valuemax="[%= maxValue %]" style="width: ${progressPercentage}">
+	    <span class="sr-only"><fmt:formatNumber value="${[%=item%].[%=attrProp%]}" pattern="${[%=pattern%]}"/></span>
+	  </div>
+	</div>	
+[% } else { 
+	throwGenerationException("Attribute type not valid! The template supports only float, integer or decimal types.")
+   } %]
+[%if (mode == "value") { %]
+	
+[% }
+} %]

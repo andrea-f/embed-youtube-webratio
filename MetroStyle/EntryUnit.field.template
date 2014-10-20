@@ -1,0 +1,473 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter label="Label Position" name="label-position" type="enum" values="top|left|none" default="left">
+Position of the field label in relation to the field itself.
+Applicable only when rendering the entire Layout Field at once (mode = "full"), 
+Allowed values are:
+- left (default): label on the left side of the field,
+- top: label just above the field,
+- none: label not shown.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Label width" name="label-width" type="enum" default="2" values="1|2|3|4|5|6|7|8">
+Grid width of the field label.
+Applicable only when rendering the entire Layout Field at once (mode = "full"), 
+Used when placing labels on left, in order to visually align fields.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Custom ID" name="custom-id" type="string">
+Specifies a custom value for the "id" attribute of the generated
+HTML field. This overrides any identifier that is usually generated.
+Defaults to the filed property name in the form bean.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Input Max Length" name="input-max-length" type="string">
+Defines the max length of inputs.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="text-prepend" label="Input text prepend" type="string">
+Define if add text before the text-based input.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="text-append" label="Input text append" type="string">
+Define if add text after the text-based input.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use Javascript" name="use-javascripts" type="boolean" default="true">
+Defines if calendar or Advanced HTML Editor have to be used.
+ - true (default)
+</wr:LayoutParameter>
+<wr:LayoutParameter label="CKEditor toolbar" name="fck-toolbar" type="string" default="WebRatioDefault">
+Defines the toolbar the CKEditor should use.
+Allowed values are:
+- any toolbar defined in the CKEditor/config.js file
+- WebRatioDefault (default)
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Textarea height" name="height" default="8" type="string">
+Defines the height of the textarea fields.
+Allowed values are:
+- numbers of rows
+- 8 (default)
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Boolean field rendering" name="boolean-field-rendering" type="enum" values="normal|checkbox|checkbox and label" default="normal">
+Defines the rendering of a boolean field.
+Allowed values are:
+- normal (default)
+- checkbox
+- checkbox and label
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use 'No selection' in Selection fields" name="selection-field-empty-message" type="boolean" default="true">
+Defines if the option "No selection" has to be used.
+Allowed values are:
+ - true (default)
+ - false
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use 'No selection' in MultiSelection fields" name="multi-selection-field-empty-message" type="boolean" default="false">
+Defines if the option "No selection" has to be used in MultiSelection fields.
+Allowed values are:
+ - true
+ - false (default)
+</wr:LayoutParameter>
+<wr:LayoutParameter label="No Selection Message" name="no-selection-message" type="string" default="selectionfield.noselection">
+Defines the key of the message to use as the no selection item.
+Default value: selectionfield.noselection
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Selection fields rendering" name="selection-field-rendering" type="enum" values="select|radio|radio vertical" default="select">
+Defines the rendering of a selection field.
+Allowed values are:
+- select (default)
+- radio
+- radio vertical
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Multi selection fields rendering" name="multi-selection-field-rendering" type="enum" values="checkbox|checkbox vertical|multiple select" default="checkbox">
+Defines the rendering of a multi selection field.
+Allowed values are:
+- checkbox (default)
+- checkbox vertical
+- multiple select
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Multiple Select Size" name="multiple-select-height" default="5" type="string">
+Defines the size of a multiselection field rendered as multiple select.
+By default the multiple select gets the size of the elements shown.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Show 'Select All' and 'Deselect All' links" name="select-all-links" type="boolean" default="false">
+Defines if multiselection fields provide two links to select and deselect all options.
+Allowed values are:
+ - true
+ - false (default)
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Localize Values" name="localize-values" type="boolean" default="false">
+Defines whether to use bean message to print out the (multi) selection field values.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Redisplay password" name="redisplay-password" type="boolean" default="false">
+Defines if the password has to be redisplayed on page refresh.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Show Mandatory Fields" name="mandatory-fields" type="boolean" default="false">
+Defines whether to show a '*' for mandatory fields or not.
+Allowed values are: true or false(default).
+</wr:LayoutParameter>
+<wr:LayoutParameter name="placeholder" label="Placeholder" type="string" default="">
+Define the html5 placeholder tag
+</wr:LayoutParameter>
+[%import org.apache.commons.lang.StringEscapeUtils
+
+import org.apache.commons.lang.math.NumberUtils
+import org.apache.commons.lang.StringUtils
+
+def type = field["type"]
+def subType = getById(field["subType"])
+def typeId = type
+if(subType != null){
+  typeId = subType["id"]
+  type = subType["type"]
+}
+def contentType = field["contentType"]
+def fieldId = field["field"]
+def modifiable = (field["modifiable"] == "true")
+def plain = getById(field["field"])?.name == "Field"
+def selection = getById(field["field"])?.name == "SelectionField"
+def multiSelection = getById(field["field"])?.name == "MultiSelectionField"
+def fieldProp = field["field"] + ((isLocalizedType(type) && plain) ? "_locale" : "")
+def htmlId = StringUtils.defaultIfEmpty(params["custom-id"], fieldProp)
+def labelWidth = NumberUtils.toInt(params["label-width"])
+def height = NumberUtils.toInt(params["height"])
+def maxLength = params["input-max-length"]
+def useJavascripts = params["use-javascripts"]
+def localizeValues = "true" == params["localize-values"] || (isBpmLocalizedModel() && StringUtils.isNotBlank(getField(field).valueOf("@bpm:uuid")))
+
+def txtPrepend = StringEscapeUtils.escapeHtml(params["text-prepend"])?.trim()
+def txtAppend = StringEscapeUtils.escapeHtml(params["text-append"])?.trim()
+
+def fileAccept = contentType + ((StringUtils.isBlank(contentType) || StringUtils.contains(contentType, "/")) ? "" : "/*")
+
+def ckEditorToolbar = StringUtils.defaultIfEmpty(params["fck-toolbar"], "WebRatioDefault")
+def formBean = getFormBeanName(page)
+def submitLinks = getSubmitLinks(field) 
+def readCond = getDisableCondition(field)
+def readOnly = "false"
+if(!selection && !multiSelection && !modifiable){
+  readOnly = "true"
+}else if(readCond != null){
+  readOnly = "\${" + readCond + "}"  
+}
+def captcha = field.selectSingleNode("VRules/CaptchaValidationRule") != null
+def submitLinksClass = (submitLinks.size() > 0 ? "wr-submitButtons:" + submitLinks.collect{ it["link"] }.join(",") : "")
+def printFieldMode = { mode ->
+	def templateFile = getElementLayoutFile(getFieldLayout(field).path, ".field.template")
+	printRaw(executeTemplate(templateFile.absolutePath, [ field: field, mode: mode, styleClass: styleClass ]));
+}
+
+def printPlaceholder = { ->
+  if (params["placeholder"] != "") {
+    return "altKey=\"" + getJSPTagValue(params["placeholder"]) +  "\""
+  }
+  return ""
+}
+
+if (mode == "full") { %]
+<c:set var="btFieldError"><html:errors property="[%=fieldProp%]"/></c:set>
+<div class="form-group[%= (params["label-position"] == "left") ? " form-horizontal row" : "" %]<c:if test="${not (empty btFieldError)}"> has-error</c:if> <wr:StyleClass context="field"/>">
+	[% if (params["label-position"] != "none") { printFieldMode("label") } %]
+	<div class="controls[%= (params["label-position"] == "left") ? (" col-md-" + (12-labelWidth)) : "" %]">
+		[% printFieldMode("value") %]
+		[% printFieldMode("error") %]
+	</div>
+</div>
+[% } else if (mode == "error") { %]
+<c:set var="btFieldError"><html:errors property="[%=fieldProp%]"/></c:set><c:if test="${not(empty(btFieldError))}"><span class="field-error help-block <wr:StyleClass/>">${btFieldError}</span></c:if>
+[% } else if (mode == "label") { %]
+<label class="control-label <wr:StyleClass/> [%= (params["label-position"] == "left") ? (" col-md-" + labelWidth) : "" %]" for="[%= htmlId %]"><wr:Label context="field"/>[% if (params["mandatory-fields"] == "true" && isMandatoryField(field)) { %] *[% } %]</label>
+[% } else if (plain) {
+	if (type == "boolean") {
+		if (params["boolean-field-rendering"] == "checkbox") { %]
+			<div class="checkbox-inline">
+			<html:checkbox styleClass="[%=submitLinksClass%] [%=styleClass%]" property="[%=fieldProp%]" styleId="[%=htmlId%]" value="true" disabled="[% printJSPTagValue(readOnly)%]"/>
+			</div>
+		[% } else if (params["boolean-field-rendering"] == "checkbox and label") { %]
+			<div class="checkbox">
+			  <label for="[%=fieldId%]">
+				<html:checkbox styleClass="[%=submitLinksClass%] [%=styleClass%]" property="[%=fieldProp%]" styleId="[%=htmlId%]" value="true" disabled="[% printJSPTagValue(readOnly)%]"/>
+				<wr:Label context="field"/>
+			  </label>
+			</div>
+		[% } else { %]
+			[% if (modifiable) { %]
+				<label class="radio-inline" for="bool_[%=fieldId%]_0">
+  					<html:radio styleClass="[%=submitLinksClass%] [%=styleClass%]" styleId="bool_[%=fieldId%]_0" property="[%=fieldProp%]" value="true" disabled="[% printJSPTagValue(readOnly)%]"/>
+					<bean:message key="[%=typeId%].yes"/>
+				</label>
+				<label class="radio-inline" for="bool_[%=fieldId%]_1">
+  					<html:radio styleClass="[%=submitLinksClass%] [%=styleClass%]" styleId="bool_[%=fieldId%]_1" property="[%=fieldProp%]" value="false" disabled="[% printJSPTagValue(readOnly)%]"/>
+					<bean:message key="[%=typeId%].no"/>
+				</label>
+			[% } else { %]
+				<p class="form-control-static">
+				<c:choose>
+					<c:when test="${[%=formBean%].map.[%=fieldProp%]}">
+						<bean:message key="[%=typeId%].yes"/>
+					</c:when>
+					<c:otherwise>
+						<bean:message key="[%=typeId%].no"/>
+					</c:otherwise>
+				</c:choose>
+				</p>
+			[% } %]
+		[% } %]
+		<c:if test="[% printJSPTagValue(readOnly)%]">
+			<html:hidden property="[%=fieldProp%]"/>
+		</c:if>
+	[% } else if (type == "text") { %]
+		<html:textarea styleId="[%= htmlId %]" styleClass="form-control [%=styleClass%]" rows="[%= height %]" property="[%=fieldProp%]" readonly="[% printJSPTagValue(readOnly)%]"/>		
+		[% if (contentType == "text/html" && useJavascripts == "true") { %]
+			<wr:RequireResource ref="cksource-ckeditor" />
+			<script type="text/javascript">
+				if (CKEDITOR.instances['[%= fieldProp %]']) {
+					CKEDITOR.instances['[%= fieldProp %]'].destroy(true);
+				}
+				CKEDITOR.replace('[%= fieldProp %]', {
+					width: '100%',
+					height   : [%= (height * 10) + 120 %],
+					toolbar  : '[%= ckEditorToolbar %]',
+					language : '<%= ((java.util.Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getLanguage() %>',
+					baseHref : '<%= wrBaseURI %>'
+				});
+			</script>
+		[% } %]
+	[% } else if (type == "blob") { %]
+		<html:hidden property="[%=fieldProp%]_preload" styleId="[%= htmlId %]_preload"/>
+		[% if (modifiable) { %]
+			<wr:RequireResource ref="bootstrap-filestyle-js"/>
+			<html:file styleId="[%= htmlId %]" styleClass="[%=submitLinksClass%] [%=styleClass%]" property="[%=fieldProp%]" accept="[%= fileAccept %]" disabled="[% printJSPTagValue(readOnly)%]" />
+		[% } %]
+		<c:if test="${not(empty [%=formBean%].map.[%=fieldProp%]_preload)}">
+			<label class="input-group-addon blob-clear" for="[%=fieldId%]_clear"><html:checkbox styleClass="[%=submitLinksClass%] [%=styleClass%]" styleId="[%=fieldId%]_clear" property="[%=fieldProp%]_clear" disabled="[% printJSPTagValue(readOnly)%]"/> [%= (isLocalizedAncestorOrSelf(field)) ? "<bean:message key=\"clear\"/>" : "Clear" %] </label><div class="input-group-btn"><a target="blank" class="btn btn-default" href="<webratio:BLOB value="${[%=formBean%].map.[%=fieldProp%]_preload}"/>">[%= (isLocalizedAncestorOrSelf(field)) ? "<bean:message key=\"preview\"/>" : "Preview" %]</a></div>
+		</c:if>
+	[% } else if (type == "password") { %]
+		<input type="password" autocomplete="off" id="[%= htmlId %]" class="[%=submitLinksClass%] form-control [%=styleClass%]" name="[%=fieldProp%]"[% if (readOnly == "true") { %] readonly="readonly"[% } else if (readOnly != "false") { %]<c:if test="[% printJSPTagValue(readOnly)%]"> readonly="readonly"</c:if>[% } %][% if (params["redisplay-password"] == "true") {%] value="${[%=formBean%].map.[%=fieldProp%]}"[% } %]/>
+	[% } else if (captcha) { %]
+	    <div class="captcha <wr:StyleClass/>">
+	    	<c:set var="captchaImageUrl">captcha.[%=field["id"]%].jpg?t=<%=System.currentTimeMillis()%></c:set>
+	        <img id="captcha_[%=field["id"]%]" src="<webratio:BLOB value="${captchaImageUrl}"/>"/>
+	        <div class="captcha-group">
+		    	<div class="input-group">
+			      	<html:text [% if (maxLength != "") { %]maxlength="[%= maxLength %]"[% } %] styleId="[%= htmlId %]" styleClass="[%=submitLinksClass%] form-control [%=styleClass%]" property="[%=fieldProp%]" readonly="[% printJSPTagValue(readOnly)%]"/>
+			      	<span class="input-group-btn">
+			      		<button class="btn btn-default" onClick="$('#captcha_[%=field["id"]%]').attr('src', '<webratio:BLOB value="${captchaImageUrl}"/>&amp;renew=' + new Date().valueOf())" type="button"><span class="glyphicon glyphicon-refresh"></span></button>
+			      	</span>
+		      	</div>
+	      	</div>
+	    </div>
+	[% } else { %]
+		[% if ((type == "date" || type == "time" || type == "timestamp") && useJavascripts == "true") { %]
+			<div class="input-calendar input-group">
+				<html:text [% if (maxLength != "") { %]maxlength="[%= maxLength %]"[% } %] styleId="[%= htmlId %]" styleClass="[%=submitLinksClass%] form-control [%=styleClass%]" property="[%=fieldProp%]" readonly="[% printJSPTagValue(readOnly) %]"/>
+				<span class="input-group-btn">
+				<c:choose><c:when test="[% printJSPTagValue(readOnly) %]">
+					<button disabled class="btn btn-default" id="[%= htmlId %]_calendar" type="button"><span class="glyphicon glyphicon-calendar"></span></button>
+				</c:when><c:otherwise>
+					<button class="btn btn-default" id="[%= htmlId %]_calendar" type="button"><span class="glyphicon glyphicon-calendar"></span>
+						<wr:RequireResource ref="wr-calendar-utils"/>
+						[% if (type == "date" || type == "timestamp") { %]
+							<wr:RequireResource ref="jquery-ui-datepicker-lang"/>
+						[% } %]
+						[% if (type == "time" || type == "timestamp") { %]
+							<wr:RequireResource ref="richardson-timepicker-lang"/>
+						[% } %]
+							<script type="text/javascript">
+								jQuery(function($) { 								
+									var pattern = $.wr.calendar.[%= type %]ConfigFromJava("${[%= typeId%]Pattern}");
+									$('#[%= fieldProp %]').[%= (type == "timestamp") ? "datetime" : type %]picker({
+										showOn: "none",
+										showWeek: true,
+										showButtonPanel: true,
+									[% if (type == "date") { %]
+										dateFormat: pattern.dateFormat,
+										firstDay: <%= java.util.Calendar.getInstance((java.util.Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getFirstDayOfWeek() - 1 %>
+									[% } else if (type == "time") { %]
+										timeFormat: pattern.timeFormat,
+										ampm: pattern.ampm
+									[% } else { %]
+										dateFormat: pattern.dateFormat,
+										firstDay: <%= java.util.Calendar.getInstance((java.util.Locale) session.getAttribute(org.apache.struts.Globals.LOCALE_KEY)).getFirstDayOfWeek() - 1 %>,
+										timeFormat: pattern.timeFormat,
+										ampm: pattern.ampm,
+										separator: pattern.separator
+									[% } %]
+									});
+									$('#[%= htmlId %]_calendar').on('click', function(e) {
+										e.preventDefault();
+										$('#[%= fieldProp %]').[%= (type == "timestamp") ? "datetime" : type %]picker('show');									
+									});
+								});
+							</script>
+					</button>
+				</c:otherwise></c:choose>
+				</span>
+			</div>
+		[% } else { %]
+			[% if (StringUtils.isNotBlank(txtPrepend) || StringUtils.isNotBlank(txtAppend)) { %]
+			<div class="input-text input-group">
+  				[% if (StringUtils.isNotBlank(txtPrepend)) { %]
+  					<span class="input-group-addon">[%= txtPrepend %]</span>
+				[% } %]
+			[% } %]
+			<html:text [%= printPlaceholder()%] [% if (maxLength != "") { %]maxlength="[%= maxLength %]"[% } %] styleId="[%= htmlId %]" styleClass="[%=submitLinksClass%] [%= (params["placeholder"] != "") ? "with-placeholder": ""%] form-control [%=styleClass%]" property="[%=fieldProp%]" readonly="[% printJSPTagValue(readOnly) %]"/>
+			[% if (StringUtils.isNotBlank(txtPrepend) || StringUtils.isNotBlank(txtAppend)) { %]
+				[% if (StringUtils.isNotBlank(txtAppend)) {%]
+  					<span class="input-group-addon">[%= txtAppend %]</span>
+				[% } %]
+			</div>
+			[% } %]
+  		[% } %]
+	[% } %]
+[% } else if (selection) { 
+		// selection field variables
+		def labelProperty = field["field"] + "LabelList" + (isLocalizedType(type) ? "_locale" : "")
+		def listProperty = field["field"] + "List"
+		def selectionFieldRendition = params["selection-field-rendering"]
+		def selectionFieldEmpty = params["selection-field-empty-message"]
+        if(readCond != null){
+           %]<c:if test="[% printJSPTagValue(readOnly)%]"><html:hidden property="[%= fieldProp %]"/></c:if>[%        
+        }
+		if (type == "boolean") {
+			if (selectionFieldRendition == "select") { %]
+			<html:select styleId="[%= htmlId %]" styleClass="[%=submitLinksClass%] form-control [%=styleClass%]" property="[%=fieldProp%]" disabled="[% printJSPTagValue(readOnly)%]">
+			  [% if (selectionFieldEmpty == "true") { %]
+			  	<html:option value=""><bean:message key="[%=params["no-selection-message"]%]"/></html:option>
+			  [% } %]
+			  <html:option value="true"><bean:message key="[%=typeId%].yes"/></html:option>
+			  <html:option value="false"><bean:message key="[%=typeId%].no"/></html:option>
+			</html:select>
+			[% } else if (selectionFieldRendition == "radio vertical") { %]
+				<div class="radio">
+				<label for="bool_[%=fieldId%]_0">
+					<html:radio property="[%=fieldProp%]" value="true" styleId="bool_[%=fieldId%]_0" styleClass="[%=submitLinksClass%]" disabled="[% printJSPTagValue(readOnly) %]">
+		      		  <bean:message key="[%=typeId%].yes"/>
+		      		</html:radio>
+				</label>
+				</div>
+				<div class="radio">
+				<label for="bool_[%=fieldId%]_1">
+	  				<html:radio property="[%=fieldProp%]" value="false" styleId="bool_[%=fieldId%]_1" styleClass="[%=submitLinksClass%]" disabled="[% printJSPTagValue(readOnly) %]">
+		      		  <bean:message key="[%=typeId%].no"/>
+		      		</html:radio>
+				</label>
+				</div>
+			[% } else { %]
+				<label class="radio-inline" for="bool_[%=fieldId%]_0">
+					<html:radio property="[%=fieldProp%]" value="true" styleId="bool_[%=fieldId%]_0" styleClass="[%=submitLinksClass%]" disabled="[% printJSPTagValue(readOnly) %]">
+		      		  <bean:message key="[%=typeId%].yes"/>
+		      		</html:radio>
+				</label>
+				<label class="radio-inline" for="bool_[%=fieldId%]_1">
+	  				<html:radio property="[%=fieldProp%]" value="false" styleId="bool_[%=fieldId%]_1" styleClass="[%=submitLinksClass%]" disabled="[% printJSPTagValue(readOnly) %]">
+		      		  <bean:message key="[%=typeId%].no"/>
+		      		</html:radio>
+				</label>				
+			[% } %]
+		[% } else { 
+			if (selectionFieldRendition == "select") { %]
+				<html:select styleId="[%= htmlId %]" styleClass="[%=submitLinksClass%] form-control [%=styleClass%]" property="[%= fieldProp %]" disabled="[% printJSPTagValue(readOnly)%]">
+					[% if (selectionFieldEmpty == "true") { %]
+				  		<html:option value=""><bean:message key="[%=params["no-selection-message"]%]"/></html:option>
+				  	[% } %]
+				  [%if (localizeValues) {%]
+					<c:forEach var="current" varStatus="status" items="${[%= formBean + ".map." + listProperty %]}">
+						<html:option value="${current}" key="${[%= formBean + ".map." + labelProperty %][status.index]}"/>
+					</c:forEach>
+				  [%} else {%]
+				    <html:options property="[%= listProperty %]" labelProperty="[%= labelProperty %]"/>
+				  [% } %]
+				</html:select>
+			[% } else if (selectionFieldRendition == "radio vertical") { %]
+				<c:forEach var="current" varStatus="status" items="${[%= formBean + ".map." + listProperty %]}">
+	      			<c:set var="index" value="${status.index}"/>
+	      			<div class="radio">
+					<label for="sf_[%=fieldId%]_${index}">
+		  				<input type="radio" name="[%= fieldProp %]" id="sf_[%=fieldId%]_${index}" class="[%=submitLinksClass%]" value="<c:out value="${current}"/>" <c:if test="${current eq [%= formBean + ".map." + fieldProp %]}">checked="checked"</c:if> [% if(readCond != null){%]<c:if test="[% printJSPTagValue(readOnly)%]">disabled</c:if>[%}%]/>
+	      				[%if (localizeValues) {%]
+						   <bean:message key="${[%= formBean + ".map." + labelProperty %][index]}"/>
+					    [%} else {%]
+						   <c:out value="${[%= formBean + ".map." + labelProperty %][index]}"/> 
+					    [%}%]
+					</label>
+					</div>
+	      		</c:forEach>
+			[% } else { %]
+				<c:forEach var="current" varStatus="status" items="${[%= formBean + ".map." + listProperty %]}">
+	      			<c:set var="index" value="${status.index}"/>
+	      			<label class="radio-inline" for="sf_[%=fieldId%]_${index}">
+		  				<input type="radio" name="[%= fieldProp %]" id="sf_[%=fieldId%]_${index}" class="[%=submitLinksClass%]" value="<c:out value="${current}"/>" <c:if test="${current eq [%= formBean + ".map." + fieldProp %]}">checked="checked"</c:if> [% if(readCond != null){%]<c:if test="[% printJSPTagValue(readOnly)%]">disabled</c:if>[%}%]/>
+	      				[%if (localizeValues) {%]
+						   <bean:message key="${[%= formBean + ".map." + labelProperty %][index]}"/>
+					    [%} else {%]
+						   <c:out value="${[%= formBean + ".map." + labelProperty %][index]}"/> 
+					    [%}%]
+					</label>
+	      		</c:forEach>
+			[% } %]
+		[% } %]
+[% } else if (multiSelection) { 
+	// multi selection field variables
+	def multiselectionFieldEmpty = params["multi-selection-field-empty-message"]	 
+	if (params["multi-selection-field-rendering"] != "multiple select") { 
+		def listProperty = formBean + ".map." + fieldProp + "List"
+		def labelProperty = formBean + ".map." + fieldProp + "LabelList" + (isLocalizedType(type) ? "_locale" : "") 
+		if (readCond != null) { %]
+			<c:if test="[% printJSPTagValue(readOnly)%]">
+				<c:forEach var="preCheck" items="${[%=formBean%].map.[%= fieldProp%]}">
+					<html:hidden property="[%= fieldProp %]" value="${preCheck}"/>
+				</c:forEach>
+			</c:if>
+		[% } %]
+			[% if (params["select-all-links"] == "true") { %]
+			<div class="btn-toolbar mt-0">
+				<div class="btn-group">
+					<a class="btn btn-default btn-sm" href="javascript:selectAll('[%= fieldProp %]', true)"><bean:message key="multiselectionfield.selectAll"/></a>
+					<a class="btn btn-default btn-sm" href="javascript:selectAll('[%= fieldProp %]', false)"><bean:message key="multiselectionfield.deselectAll"/></a>
+				</div>
+			</div>
+			[% } %]
+			<c:forEach var="current" varStatus="status" items="${[%=listProperty%]}">
+				[% if (params["multi-selection-field-rendering"] == "checkbox vertical") { %]
+				<div class="checkbox">
+				[% } %]
+				 <label[% if (params["multi-selection-field-rendering"] == "checkbox") { %] class="checkbox-inline"[% } %] for="msf_[%=fieldId%]_${status.index}">
+				  <html:multibox styleClass="[%=submitLinksClass%] [%= styleClass %]" property="[%=fieldProp%]" value="${current}" disabled="[% printJSPTagValue(readOnly)%]" styleId="msf_[%=fieldId%]_${status.index}"/>
+					[%if (localizeValues) {%]
+					   <bean:message key="${[%=labelProperty%][status.index]}"/>
+				    [%} else {%]
+					   <c:out value="${[%=labelProperty%][status.index]}"/>
+				    [%}%]
+				 </label>
+				[% if (params["multi-selection-field-rendering"] == "checkbox vertical") { %]
+				</div>
+				[% } %]
+			</c:forEach>
+			
+	[% } else {
+		def listProperty = fieldProp + "List"
+		def labelProperty = fieldProp + "LabelList" + (isLocalizedType(type) ? "_locale" : "") 
+		if (readCond != null) { %]
+			<c:if test="[% printJSPTagValue(readOnly)%]">
+				<c:forEach var="preCheck" items="${[%=formBean%].map.[%= fieldProp%]}">
+					<html:hidden property="[%= fieldProp %]" value="${preCheck}"/>
+				</c:forEach>
+			</c:if>
+		[% } %]
+		[% if (params["select-all-links"] == "true") { %]
+		<div class="btn-toolbar mt-0">
+			<div class="btn-group">
+				<a class="btn btn-default btn-sm" href="javascript:selectAll('[%= fieldProp %]', true)"><bean:message key="multiselectionfield.selectAll"/></a>
+				<a class="btn btn-default btn-sm" href="javascript:selectAll('[%= fieldProp %]', false)"><bean:message key="multiselectionfield.deselectAll"/></a>
+			</div>
+		</div>
+		[% } %]
+		<html:select styleClass="[%=submitLinksClass%] form-control [%= styleClass %]" styleId="[%= htmlId %]" property="[%= fieldId %]" multiple="yes" size="[%= params["multiple-select-height"] %]" disabled="[% printJSPTagValue(readOnly)%]">
+			[% if (multiselectionFieldEmpty == "true") { %]
+				<html:option value=""><bean:message key="[%=params["no-selection-message"]%]"/></html:option>
+			[% } %]
+			[%if (localizeValues) {%]
+				<c:forEach var="current" varStatus="status" items="${[%=listProperty%]}">
+					<html:option value="${current}" key="${[%=labelProperty%][status.index]}"/>
+				</c:forEach>
+			[%} else {%]
+			   <html:options property="[%=listProperty%]" labelProperty="[%=labelProperty%]"/>
+		    [%}%]
+		</html:select>
+		
+	[% } %]
+[% } %]

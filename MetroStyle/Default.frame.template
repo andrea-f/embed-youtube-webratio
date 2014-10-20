@@ -1,0 +1,16 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter name="show-title" label="Show title" type="boolean" default="true">
+Define if the frame title is shown.
+Default value is true.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="frame-class" label="Frame class" type="string">
+Define a custom css class on the frame.
+</wr:LayoutParameter>
+[% setHTMLOutput() %]
+<div[%= (params["frame-class"] != "") ? (" class='" + params["frame-class"] + "' ") : ""%]>
+[% if (params["show-title"] == "true") { %]
+	<h3><wr:Label context="element"/></h3>
+	<hr/>
+[% } %]
+	<wr:FrameContent/>
+</div>

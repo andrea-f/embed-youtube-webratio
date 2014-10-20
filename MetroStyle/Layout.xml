@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Layout pageLayout="Default" frameLayout="Panel" loginPage="Login" linkLayout="Default" attributeLayout="Default" errorPage="Error" fieldLayout="EntryUnit"> 
+  <UnitConfiguration unitType="MultiEntryUnit" fieldLayout="MultiEntryUnit" unitLayout="Default"/>  
+  <UnitConfiguration unitType="EntryUnit" unitLayout="Default" fieldLayout="EntryUnit"> 
+    <LayoutParameter name="label-position" value="top" type="field"/> 
+  </UnitConfiguration>  
+  <UnitConfiguration unitType="IndexUnit" unitLayout="Default"/>  
+  <UnitConfiguration unitType="DataUnit" unitLayout="Default" linkLayout="Default"> 
+    <LayoutParameter name="link-style" value="button" type="link"/> 
+  </UnitConfiguration>  
+  <UnitConfiguration unitType="PowerIndexUnit" unitLayout="Default"/>  
+  <UnitConfiguration unitType="MultiMessageUnit" unitLayout="Default" frameLayout="WRDefault/Empty" linkLayout="Default"> 
+    <LayoutParameter name="link-style" value="button" type="link"/> 
+  </UnitConfiguration>  
+  <UnitConfiguration unitType="EntityEntryUnit" linkLayout="Default"> 
+    <LayoutParameter name="link-style" value="button" type="link"/> 
+  </UnitConfiguration>  
+  <UnitConfiguration unitType="MultiChoiceIndexUnit" unitLayout="Default"/>  
+  <Resources alwaysRequired="metro-app-css metro-app-js showiframe"> 
+    <Resource type="javascript" path="MetroStyle/js/showiframe.js" name="showiframe" requires="bootstrap-js jquery"/>
+    <Resource type="css" path="MetroStyle/css/app.css" name="metro-app-css"/>  
+    <Resource type="javascript" path="MetroStyle/js/app.min.js" name="metro-app-js" requires="bootstrap-js jquery"/>  
+    <Resource type="javascript" path="MetroStyle/js/html5shiv.min.js" name="aFarkas-html5shiv" ieCondition="lt IE 9"/>  
+    <Resource type="javascript" path="MetroStyle/js/respond.min.js" name="Scott-Jehl-respond" ieCondition="lt IE 9"/>  
+    <Resource type="javascript" path="MetroStyle/js/bootstrap.min.js" name="bootstrap-js" requires="aFarkas-html5shiv jquery Scott-Jehl-respond"/>  
+    <Resource type="javascript" path="MetroStyle/js/bootstrap-filestyle.min.js" name="bootstrap-filestyle-js" requires="bootstrap-js"/>  
+    <Resource type="css" path="MetroStyle/css/bpm.css" name="metro-bpm-css"/> 
+    
+  </Resources>  
+  <UnitConfiguration unitType="MultiDataUnit" unitLayout="Default" linkLayout="Default"> 
+    <LayoutParameter name="link-style" value="button" type="link"/> 
+  </UnitConfiguration>  
+  <UnitConfiguration unitType="HierarchicalIndexUnit" unitLayout="Default"/>  
+  <UnitConfiguration unitType="RecursiveHierarchicalIndexUnit" unitLayout="Default"/>  
+  <UnitConfiguration unitType="ProcessUnit" unitLayout="Normal"/>  
+  <UnitConfiguration unitType="EventCalendarUnit" unitLayout="Default"/>
+</Layout>

@@ -1,0 +1,28 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter name="tab-style" label="Tab style" type="enum" default="tabs" values="tabs|pills">
+Define the style applied to tab nav
+</wr:LayoutParameter>
+<wr:LayoutParameter name="justified" label="Justified" type="boolean" default="false">
+Define if tabs or pills equal widths of their parent at screens. On mobile the nav links are stacked.
+</wr:LayoutParameter>
+[%setHTMLOutput()%]
+<div class="nav-tabs-custom">
+	<ul class="nav nav-[%= params["tab-style"] %][%= (params["justified"] == "true") ? " nav-justified" : "" %]" id="tabs_[%= getLayoutId(cell) %]" role="tablist">
+	<wr:Iterate var="cellElem" context="cell" varIndex="index" select="layout:Unit|layout:Field|layout:Link|layout:Attribute|layout:Grid|layout:SubPage">
+	[% def elem = (cellElem.getQualifiedName() == "layout:Grid" && "cell".equals(cellElem.attributeValue("containerType"))) ? cellElem.selectSingleNode("layout:Row/layout:Cell") : cellElem %]
+		<wr:Visible context="cellElem">
+			<li[% if (index == 0) { %] class="active"[% } %]><a href="#tab_[%= getLayoutId(cellElem) %]" role="tab" data-toggle="tab"><wr:Label context="elem"/></a></li>
+		</wr:Visible>
+	</wr:Iterate>
+	</ul>
+	
+	<div class="tab-content">
+	<wr:Iterate var="cellElem" context="cell" varIndex="index" select="layout:Unit|layout:Field|layout:Link|layout:Attribute|layout:Grid|layout:SubPage">
+		<wr:Visible context="cellElem">
+			<div class="tab-pane[% if (index == 0) { %] active[% } %]" id="tab_[%= getLayoutId(cellElem) %]">
+			<wr:Element/>
+			</div>
+		</wr:Visible>
+	</wr:Iterate>
+	</div>
+</div>
