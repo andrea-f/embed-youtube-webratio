@@ -1,0 +1,114 @@
+#?delimiters [%, %], [%=, %]
+[%setHTMLOutput()
+
+def createLink = unit.selectSingleNode("layout:Link[@name='create']")
+def updateLink = unit.selectSingleNode("layout:Link[@name='update']")
+def forceUpdateLink = unit.selectSingleNode("layout:Link[@name='forceUpdate']")
+def deleteLink = unit.selectSingleNode("layout:Link[@name='delete']")
+def diagramLink = unit.selectSingleNode("layout:Link[@name='diagram']")
+
+def updateAllLink = unit.selectSingleNode("layout:Link[@name='updateAll']")
+def deleteAllLink = unit.selectSingleNode("layout:Link[@name='deleteAll']")
+
+def layoutId = getLayoutId(unit)
+
+%]
+<wr:RequireResource ref="metro-bpm-css"/>
+<c:if test="${not(empty <wr:Id context="unit"/>)}">
+<wr:Frame>
+<div class="plain <wr:StyleClass/>">
+ <div class="plain ProcessUnit">
+	<c:if test="${not(empty <wr:Id context="unit"/>.status)}">
+	<div class="alert alert-${<wr:Id context="unit"/>.status}">
+         <bean:message key="Process.metadata.${<wr:Id context="unit"/>.status}"/>
+	</div>
+	</c:if>
+	
+	<table class="table table-striped table-hover">
+       <thead>
+       <tr>
+            <th scope="col" class="<wr:StyleClass/> smallcol">
+                <script>multiChoiceMap["[%= layoutId%]"] = "all"</script>
+				<input type="checkbox" id="[%= layoutId%]SelectAll" onclick="toggleCheckboxes('[%= layoutId%]', 'Checked')"/>
+				<label class="sr-only" for="[%= layoutId%]SelectAll">Select all rows</label>
+            </th>
+			<th scope="col" class="<wr:StyleClass/>">Process</th>
+			<th scope="col" class="<wr:StyleClass/>">Version</th>
+			<th scope="col" class="<wr:StyleClass/>">Status</th>	
+			<th scope="col" class="<wr:StyleClass/> smallcol" colspan="3">Commands</th>
+		</tr>
+		</thead>
+		<c:if test="${not(empty <wr:Id context="unit"/>.data)}">
+		<tbody>
+		   <c:forEach var="current" varStatus="status" items="${<wr:Id context="unit"/>.data}">
+		      <c:set var="index" value="${status.index}"/>
+		      <c:set var="processStatus" value="${current.status}"/>
+		      <tr class="status-${processStatus}">
+		         <td class="<wr:StyleClass/>">
+		           <c:choose>
+		             <c:when test="${current.status eq 'invalid'}">
+		                <html:multibox disabled="true" property="<wr:Id context="unit"/>Checked" value="${current.key}"/>
+		             </c:when>
+		             <c:otherwise>
+		                <html:multibox styleId="[%= layoutId%]_${index}" property="<wr:Id context="unit"/>Checked" value="${current.key}"/>
+		             </c:otherwise>
+		           </c:choose>
+		         </td>
+		         
+		         <td class="<wr:StyleClass/>"><c:out value="${current.[%=getFieldName("processName")%]}"/></td>
+		         <td class="<wr:StyleClass/>"><c:out value="${current.[%=getFieldName("processVersion")%]}"/></td>
+		         <td class="<wr:StyleClass/>">${current.status}</td>
+		         <td class="<wr:StyleClass/> smallcol">
+		         <c:choose>
+		           <c:when test="${current.status eq 'new'}">
+		           		<a title="<wr:Label context="createLink"/>" href="<wr:URL context="createLink"/>" class="text-primary"><span class="glyphicon glyphicon-save"></span></a>
+		           </c:when>
+		           <c:when test="${current.status eq 'invalid'}">
+		               <a title="<wr:Label context="forceUpdateLink"/>" href="<wr:URL context="forceUpdateLink"/>" class="text-danger"><span class="glyphicon glyphicon-save"></span></a>
+		           </c:when>
+		           <c:when test="${current.status eq 'outdated'}">
+		               <a title="<wr:Label context="updateLink"/>" href="<wr:URL context="updateLink"/>" class="text-warning"><span class="glyphicon glyphicon-save"></span></a>
+		           </c:when>
+		           <c:otherwise>
+		           	  <span class="text-muted"><span class="glyphicon glyphicon-save"></span></span>
+		           </c:otherwise>
+		         </c:choose>
+		         </td>
+		         <td class="<wr:StyleClass/> smallcol">
+		         <c:choose>
+		           <c:when test="${current.status ne 'new'}">
+		             <a title="<wr:Label context="deleteLink"/>" href="<wr:URL context="deleteLink"/>" class="text-danger"><span class="glyphicon glyphicon-remove"></span></a>
+		           </c:when>
+		           <c:otherwise><span class="text-muted"><span class="glyphicon glyphicon-remove"></span></span></c:otherwise>
+		         </c:choose>
+		         </td>
+		         <td class="<wr:StyleClass/> smallcol">
+		         	<a title="<wr:Label context="diagramLink"/>" href="<wr:URL context="diagramLink" position="'index'"/>" [% if (diagramLink["newWindow"] == "true") { %]target="_blank"[% } %] class="text-primary"><span class="glyphicon glyphicon-info-sign"></span></a>
+		         </td>
+		      </tr>
+		      <c:if test="${not(empty current.details)}">
+		      <tr class="status-${processStatus}">
+		        <td colspan="7">
+		            <ul>
+		            <c:forEach var="detail" items="${current.details}">
+		              <li><c:out value="${detail}"/></li>
+		            </c:forEach>
+		            </ul>
+		        </td>
+		      </tr>
+		      </c:if>
+		   </c:forEach>
+		</tbody>
+		</c:if>
+	</table>	
+    
+    <div class="btn-toolbar">
+        <wr:Link class="btn" context="updateAllLink" type="button"/>
+        <wr:Link class="btn" context="deleteAllLink" type="button"/>
+        <span class="text-danger"><html:errors property="<wr:Id context="unit"/>Checked" /></span>
+    </div>         
+    
+ </div>
+</div>   
+</wr:Frame>
+</c:if>   

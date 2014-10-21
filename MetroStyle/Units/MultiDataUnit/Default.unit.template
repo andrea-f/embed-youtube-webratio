@@ -1,0 +1,73 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter label="Label Position" name="label-position" type="enum" values="top|left|none" default="left">
+Position of the attribute label in relation to the attribute itself. 
+Allowed values are:
+- left (default): label on the left side of the attribute,
+- top: label just above the attribute,
+- none: label not shown.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Label width" name="label-width" type="enum" default="2" values="1|2|3|4|5|6|7|8">
+Grid width of the attribute label.
+Used when placing labels on left, in order to visually align attributes.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use Empty Unit Message" name="use-empty-unit-message" type="boolean" default="false">
+Defines the usage of a message for empty units.
+Allowed values are: true(default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Empty Unit Message" name="empty-unit-message" type="string" default="emptyUnitMessage">
+Defines the key of the message to use if the unit is empty.
+Default value: emptyUnitMessage
+</wr:LayoutParameter>
+[%import org.apache.commons.lang.math.NumberUtils
+ setHTMLOutput()
+def styleClass = unit["styleClass"]
+def hasLinks = !unit.selectNodes("layout:Link").isEmpty()
+def labelPosition = params["label-position"]
+def labelWidth = NumberUtils.toInt(params["label-width"])
+def useEmptyUnitMessage = params["use-empty-unit-message"]
+def emptyUnitMessage = params["empty-unit-message"]
+%]
+[% if (useEmptyUnitMessage != "true") { %]
+<c:if test="${not(empty <wr:Id context="unit"/>) and (<wr:Id context="unit"/>.dataSize gt 0)}">
+[% } else { %]
+<c:choose>
+<c:when test="${not(empty <wr:Id context="unit"/>) and (<wr:Id context="unit"/>.dataSize gt 0)}">
+[% } %]
+	<wr:Frame>
+		<div class="<wr:StyleClass/>">
+			<c:forEach var="current" varStatus="status" items="${<wr:Id context="unit"/>.data}">
+			<c:set var="index" value="${status.index}"/>
+				<wr:Iterate var="attr" context="unit" select="layout:Attribute">
+				<wr:Visible>
+					[% if (labelPosition == "left") { %]<div class="row">[% } %]
+						[% if (labelPosition != "none") { %]<label class="header[%= (labelPosition == "left") ? (" col-md-" + labelWidth) : "" %]"><wr:Label/></label>[% } %]
+						<div class="value[%= (labelPosition == "left") ? (" col-md-" + (12-labelWidth)) : "" %]"><wr:Value/></div>
+					[% if (labelPosition == "left") { %]</div>[% } %]
+				</wr:Visible>
+				</wr:Iterate>
+				<c:if test="${not status.last}"><hr/></c:if>
+			</c:forEach>
+			[% if (hasLinks) { %]
+			<p class="unit-actions">
+			<wr:Iterate var="link" context="unit" select="layout:Link">
+			<wr:Visible>
+				<wr:Link/>
+			</wr:Visible>
+			</wr:Iterate>
+			</p>
+			[% } %]
+		</div>
+	</wr:Frame>     
+[% if (useEmptyUnitMessage != "true") { %]
+</c:if>
+[% } else { %]
+</c:when>
+<c:otherwise>
+	<wr:Frame>
+		<div class="alert alert-info empty-message <wr:StyleClass/>">
+			<bean:message key="[%printJSPTagValue(emptyUnitMessage)%]"/>
+		</div>
+	</wr:Frame>
+</c:otherwise>
+</c:choose>
+[% } %]   

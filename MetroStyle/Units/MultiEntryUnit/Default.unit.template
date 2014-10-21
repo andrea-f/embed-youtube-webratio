@@ -1,0 +1,122 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter name="show-header" label="Show Header" type="boolean" default="true">
+Toggles rendition of field headers.
+Allowed values are: true (default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use Alternate Rows" name="use-alternate" type="boolean" default="true">
+Defines the usage of alternates colours for each line.
+Allowed values are: true or false(default).
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Compact table" name="compact" type="boolean" default="false">
+Makes tables more compact by cutting cell padding in half.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="show-checkbox" label="Show Checked Checkbox" type="boolean" default="true">
+Defines the rendition of the checkbox for each row.
+Allowed values are: true (default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="select-all" label="Select All" type="boolean" values="true|false" default="false">
+Defines the rendition of a link that allows to select or deselect
+all the checkboxes of the unit.
+Allowed values are: true (default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="button-group" label="Button group" type="boolean" default="false">
+Wrap the buttons.
+</wr:LayoutParameter>
+[% 
+setHTMLOutput()
+
+def showHeader = params["show-header"]
+def showCheckBox = params["show-checkbox"] == "true"
+def selectAll = params["select-all"] 
+def useAlternate = params["use-alternate"]
+def compact = params["compact"]
+def buttonGroup = params["button-group"] == "true"
+def links = unit.selectNodes("layout:Link")
+def layoutId = getLayoutId(unit)
+def colSpan = unit.selectNodes("layout:Field").size()
+%]
+[% if (unit["minLength"] == "0") { %]
+  <c:if test="${not(empty <wr:Id context="page"/>FormBean.map.<wr:Id context="unit"/>) and (<wr:Id context="page"/>FormBean.map.<wr:Id context="unit"/>DataSize gt 0)}">
+[% } %]
+<wr:Frame>
+	<div class="plain <wr:StyleClass/>">
+		<div class="plain MultiEntryUnit">
+			<c:set var="btFieldError"><html:errors property="<wr:Id context="unit"/>"/><html:errors property="<wr:Id context="unit"/>Checked"/></c:set>
+			<c:if test="${not (empty btFieldError)}">
+				<div class="alert alert-danger">
+					<html:errors property="<wr:Id context="unit"/>"/>
+					<html:errors property="<wr:Id context="unit"/>Checked"/>
+				</div>
+			</c:if>
+			<table class="table table-bordered table-hover [% if (compact == "true") { %] table-condensed[% } %][% if (useAlternate == "true") { %] table-striped[% } %]">
+				[% if (showHeader == "true") { %]
+				<thead>
+					<tr>
+						<th scope="col" class="smallcol [% if (!showCheckBox) {%]hidden [% } %]">
+							[% if (selectAll == "true" && showCheckBox) { %]
+								<script>multiChoiceMap["[%= layoutId%]"] = "all";</script>
+								<div class="checkbox">
+									<input type="checkbox" id="[%= layoutId%]SelectAll" onclick="toggleCheckboxes('[%= layoutId%]', 'Checked')" />
+								</div>
+								<label class="sr-only" for="[%= layoutId%]SelectAll">Select all rows</label>
+							[% } %]
+						</th>
+						<wr:Iterate var="field" context="unit" select="layout:Field">
+							<wr:Visible>
+								<th scope="col" class="<wr:StyleClass/> header"><wr:Label/></th>
+							</wr:Visible> 
+						</wr:Iterate>
+					</tr>
+				</thead>
+				[% } %]
+				<tbody>
+				<c:forEach var="<wr:Id context="unit"/>" varStatus="status" items="${[%=getFormBeanName(page)%].map.<wr:Id context="unit"/>}">
+					<c:set var="index" value="${status.index}"/>
+					<tr>
+						<td class="smallcol [% if (!showCheckBox) {%]hidden [% } %]">
+						[% for (hiddenField in getById(unit["id"])?.selectNodes("Field[@hidden = 'true']")) {
+							def type = hiddenField["type"]
+							if (type == "blob") { %]
+								<html:hidden property="value([%= hiddenField["id"]%]_preload)" indexed="true" name="[%= unit["id"]%]"/>
+							[% } else { %]
+								<html:hidden property="value([%= hiddenField["id"]%])" indexed="true" name="[%= unit["id"]%]"/>
+							[% } %]
+						[% } %]
+							<html:hidden property="value(key)" indexed="true" name="[%= unit["id"]%]"/>
+							[% if (showCheckBox) {%]
+								<div class="checkbox">
+									<html:multibox styleId="[%= layoutId%]_${index}" property="<wr:Id context="unit"/>Checked" value="${<wr:Id context="unit"/>.map.key}"/>
+								</div>
+								<label class="sr-only" for="[%= layoutId%]_${index}">Select row</label>
+							[% } %]
+						</td>
+						<wr:Iterate var="field" context="unit" select="layout:Field">
+							<wr:Visible>
+								[% 	def plain = getById(field["field"])?.name == "Field"
+									def fieldProp = field["field"] + ((isLocalizedType(field["type"]) && plain) ? "_locale" : "") %]
+								<c:set var="btFieldError"><html:errors property="<wr:Id context="unit"/>[${index}].value([%=fieldProp%])"/></c:set>
+								<td class="<wr:StyleClass/> value<c:if test="${not (empty btFieldError)}"> has-error</c:if>">
+									<wr:Value/>
+									<wr:FieldError/>
+								</td>
+							</wr:Visible>
+						</wr:Iterate>
+					</tr>
+				</c:forEach>
+				</tbody>
+			</table>
+			[% if (!links.isEmpty()) { %]
+			<div class="form-group form-btn">
+				[% if ( buttonGroup ) { %]<div class="btn-group">[% } %]
+				<wr:Iterate var="link" context="unit" select="layout:Link">
+					<wr:Link type="button"/> 
+				</wr:Iterate>
+				[% if ( buttonGroup ) { %]</div>[% } %]
+			</div>
+			[% } %]
+		</div>
+	</div>
+</wr:Frame>
+[% if (unit["minLength"] == "0") { %]
+	</c:if>
+[% } %]

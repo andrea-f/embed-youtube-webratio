@@ -1,0 +1,14 @@
+#?delimiters [%, %], [%=, %]
+[%	setHTMLOutput()
+	def mode = unit["mode"]
+	def templateName = getStyle(unit) + "/"
+	if ("verifyMetadata".equals(mode)) {
+		templateName += "VerifyMetadata"
+	} else if ("parameters".equals(mode)) {
+		templateName += "Parameters"
+	} else if ("error".equals(mode)) {
+		templateName = "WRDefault/ProcessError"
+	}
+	def templateFile = getUnitLayoutFileByPath(templateName, "ProcessUnit")
+	printRaw(executeTemplate(templateFile, ["templateType" : "unit"]))
+%]

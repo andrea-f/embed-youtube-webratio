@@ -1,0 +1,99 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter name="show-header" label="Show Header" type="boolean" default="true">
+Toggles rendition of field headers.
+Allowed values are: true (default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use Alternate Rows" name="use-alternate" type="boolean" default="true">
+Defines the usage of alternates colours for each line.
+Allowed values are: true or false(default).
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Compact table" name="compact" type="boolean" default="false">
+Makes tables more compact by cutting cell padding in half.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="button-group" label="Button group" type="boolean" default="false">
+Wrap the buttons.
+</wr:LayoutParameter>
+
+[%
+	setHTMLOutput()
+	
+	def showHeader = params["show-header"] == "true"
+	def useAlternate = params["use-alternate"]
+	def compact = params["compact"]
+	def buttonGroup = params["button-group"] == "true"
+	
+	def links = unit.selectNodes("layout:Link")
+	
+%]
+<wr:Frame>
+	<div class="plain <wr:StyleClass/>">
+		<div class="plain MultiEntryUnit dynamic">
+			<c:set var="btFieldError"><html:errors property="<wr:Id context="unit"/>"/><html:errors property="<wr:Id context="unit"/>Checked"/></c:set>
+			<c:if test="${not (empty btFieldError)}">
+				<div class="alert alert-danger">
+					<html:errors property="<wr:Id context="unit"/>"/>
+					<html:errors property="<wr:Id context="unit"/>Checked"/>
+				</div>
+			</c:if>
+			<html:hidden property="<wr:Id context="unit"/>Keys" styleId="<wr:Id context="unit"/>Key"></html:hidden>
+			<html:hidden property="<wr:Id context="unit"/>DataSize" styleId="<wr:Id context="unit"/>DataSize"></html:hidden>
+			<script>
+			multiEntryMap["<wr:Id context="unit"/>LastIndex"] = "<c:out value="${[%= getFormBeanName(page) %].map.<wr:Id context="unit"/>DataSize -1}"></c:out>";
+			</script>
+			<table id="<wr:Id context="unit"/>" class="table table-bordered table-hover [% if (compact == "true") { %] table-condensed[% } %][% if (useAlternate == "true") { %] table-striped[% } %]">
+				[% if ( showHeader ) { %]
+				<thead>
+					<tr>
+					<wr:Iterate var="field" context="unit" select="layout:Field">
+						<wr:Visible>
+							<th scope="col"><wr:Label/></th>
+						</wr:Visible>
+					</wr:Iterate>
+						<th scope="col" class="smallcol"><!-- column for remove button --></th>
+					</tr>
+				</thead>
+			[% } %]
+				<tbody class="text-center">
+				<c:forEach var="<wr:Id context="unit"/>" varStatus="status" items="${[%=getFormBeanName(page)%].map.<wr:Id context="unit"/>}">
+					<c:set var="index" value="${status.index}"/>
+					<tr id="<c:out value="<wr:Id context="unit"/>[${index}]"/>" class="ajaxPreservedMarkup">
+						<wr:Iterate var="field" context="unit" select="layout:Field">
+						<wr:Visible>
+						[%
+						def plain = getById(field["field"])?.name == "Field"
+						def fieldProp = field["field"] + ((isLocalizedType(field["type"]) && plain) ? "_locale" : "") %]
+						<c:set var="btFieldError"><html:errors property="<wr:Id context="unit"/>[${index}].value([%=fieldProp%])"/></c:set>
+						<td class="form-group <c:if test="${not (empty btFieldError)}"> has-error</c:if> <wr:StyleClass context="field"/>">
+							<wr:Value/>
+							<wr:FieldError/>
+						</td>
+						</wr:Visible>
+						</wr:Iterate>
+						<td class="smallcol"><a title="Remove Row" class="remove-row btn btn-default"><span class="glyphicon glyphicon-remove"></span></a>
+							<html:hidden property="value(key)" indexed="true" name="[%= unit["id"]%]"/>
+						[% // prints hidden fields, which do not have associated layout:Field elements
+							for (hiddenField in getById(unit["id"])?.selectNodes("Field[@hidden = 'true']")) {
+							  def type = hiddenField["type"]
+						  	  if (type == "blob") { %]
+							<html:hidden property="value([%= hiddenField["id"]%]_preload)" indexed="true" name="[%= unit["id"]%]"/>
+							  [% } else { %]
+							<html:hidden property="value([%= hiddenField["id"]%])" indexed="true" name="[%= unit["id"]%]"/>
+							  [% }
+							} 
+						%]
+						</td>
+					</tr>
+				</c:forEach>
+				</tbody>
+			</table>
+			<div class="form-group form-btn">
+				<p class="pull-right"><a title="Add Row" class="add-row btn btn-default"><span class="glyphicon glyphicon-plus"></span></a><p>
+				[% if ( buttonGroup ) { %]<div class="btn-group">[% } %]
+				<wr:Iterate var="link" context="unit" select="layout:Link">
+					<wr:Link type="button"/> 
+				</wr:Iterate>
+				[% if ( buttonGroup ) { %]</div>[% } %]
+			</div>
+		</div>
+	</div>
+</wr:Frame>

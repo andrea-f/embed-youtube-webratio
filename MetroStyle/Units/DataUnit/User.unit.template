@@ -1,0 +1,36 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter name="prefix-text" label="Prefix Text" type="string">
+  Bundle key for a prefix text to the attributes.
+</wr:LayoutParameter>
+[%	setHTMLOutput()
+	def hasLinks = !unit.selectNodes("layout:Link").isEmpty()
+%]
+<c:if test="${not(empty <wr:Id context="unit"/>) and (<wr:Id context="unit"/>.dataSize gt 0)}">
+	[% if (hasLinks) { %]
+	<ul class="nav navbar-nav navbar-right">
+		<li class="dropdown">
+			<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+	[% } else { %]
+	<p class="navbar-text">
+	[% } %]
+	
+	[% if (params["prefix-text"] != "") { %]<bean:message key="[%= params["prefix-text"] %]"/> [% } %]
+	<wr:Iterate var="attr" context="unit" select="layout:Attribute">
+		<wr:Visible><wr:Value/></wr:Visible>
+	</wr:Iterate>
+	
+	[% if (hasLinks) { %]
+			<span class="caret"></span></a>
+			<ul class="dropdown-menu">
+				<wr:Iterate var="link" context="unit" select="layout:Link">
+				<wr:Visible>
+				  <li><wr:Link type="link"/></li>
+				</wr:Visible>
+				</wr:Iterate>
+			</ul>
+		</li>
+	</ul>
+	[% } else { %]
+	</p>
+	[% } %]
+</c:if>     

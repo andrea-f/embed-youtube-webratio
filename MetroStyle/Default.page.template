@@ -1,0 +1,297 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter name="application-name" label="Application Name" type="string" default="WebRatio">
+Define the name of the application shown on top left of the page.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="page-fluid" label="Page fluid" type="boolean" default="false">
+Define if the page is always 100% width. 
+</wr:LayoutParameter>
+<wr:LayoutParameter name="navbar-type" label="Navbar type" type="enum" values="fixed-top|static-top" default="fixed-top">
+Define the type of the nav bar.
+Default value is fixed top.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="navbar-style" label="Navbar style" type="enum" values="standard|inverse" default="standard">
+Define the style of the nav bar.
+Default value is standard.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="show-left-column" label="Show left column" type="boolean" default="false">
+Defines if the left column is shown.
+Default value is false.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="show-right-column" label="Show right column" type="boolean" default="false">
+Defines if the right column is shown.
+Default value is false.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="second-level-left" label="Show 2nd level menu on left" type="boolean" default="false">
+Defines if the the second level menu should be shown in the left column.
+Default value is false.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="show-breadcrumb" label="Show breadcrumb" type="boolean" default="true">
+Defines if breadcrumb is shown.
+Default value is true.
+</wr:LayoutParameter>
+<wr:LayoutParameter name="show-page-title" label="Show page title" type="boolean" default="true">
+Defines if breadcrumb is shown.
+Default value is true.
+</wr:LayoutParameter>
+[%import org.apache.commons.lang.StringEscapeUtils
+
+setHTMLOutput()
+
+def homePage = getHomePage(page.selectSingleNode("ancestor::SiteView"))
+
+def pageFluid = params["page-fluid"] == "true"
+def navbarType = (params["navbar-type"] != "standard") ? " navbar-" + params["navbar-type"] : ""
+def navbarStyle = (params["navbar-style"] != "standard") ? " navbar-inverse" : " navbar-default"
+def showLeftColumn = params["show-left-column"] == "true"
+def showRightColumn = params["show-right-column"] == "true"
+def secondLevelLeft = params["second-level-left"] == "true"
+def showBreadcrumb = params["show-breadcrumb"] == "true"
+def showPageTitle = params["show-page-title"] == "true"
+%]
+<wr:Page type="HTML5"/>
+<wr:Resources types="jspdeclaration"/>
+<%@ page contentType="text/html; charset=UTF-8"%>
+<% response.setHeader("X-UA-Compatible", "IE=edge"); %>
+<webratio:Page page="<wr:Id context="page"/>"/>
+<html lang="${LanguageISOCtxParam}">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+		<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+		[%if(enableURLFragments()){%]<wr:BaseURI/>[%}%]
+		<title><wr:Label context="page"/></title>
+		<wr:Resources types="css"/>
+		<wr:Resources types="javascript"/>
+	</head>
+<body>
+<a href="#main-content" class="sr-only">Skip to main content</a>
+<wr:PageForm>
+<div class="wrapper">
+	<nav id="main-nav" class="navbar[%= navbarStyle %][%= navbarType %]" role="navigation">
+		<div class="container[%= (pageFluid) ? "-fluid" : "" %]">
+			<div class="row">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+				</div>
+				<div class="navbar-collapse collapse">		      
+		            <ul class="nav navbar-nav" role="menu">
+						<wr:LandmarkMenu level="1" var="lm">
+						<wr:Visible>
+							[% if (!secondLevelLeft && getLandmarkChildren(lm).size() > 0) { %]
+								<wr:Current>
+									<li class="active dropdown">
+								</wr:Current>
+								<wr:NonCurrent>
+									<li class="dropdown">
+								</wr:NonCurrent>
+										<a href="<wr:URL/>" class="dropdown-toggle" data-toggle="dropdown" data-target="#"><wr:Label context="lm"/><span class="caret"></span></a>
+										<ul class="dropdown-menu" role="menu">
+											<wr:Current>
+												<wr:LandmarkMenu level="2" var="lm2">
+												<wr:Visible>
+													<wr:Current>
+													[% if (getLandmarkChildren(lm2).size() > 0) { %]													
+														<li class="dropdown dropdown-submenu">
+													        <a href="<wr:URL context="lm2"/>" class="dropdown-toggle" data-toggle="dropdown" data-target="#"><wr:Label context="lm2"/></a>
+													        <ul class="dropdown-menu" role="menu">
+													        	<wr:LandmarkMenu level="3" var="lm3">
+													        	<wr:Visible>
+													        		<li><wr:Link/></li>
+													        	</wr:Visible>
+													        	</wr:LandmarkMenu>
+													        </ul>
+													      </li>
+													[% } else { %]
+														<li><wr:Link/></li>
+													[% } %]
+													</wr:Current>
+													<wr:NonCurrent>
+													[% if (getLandmarkChildren(lm2).size() > 0) { %]													
+														<li class="dropdown dropdown-submenu">
+													        <a href="<wr:URL context="lm2"/>" class="dropdown-toggle" data-toggle="dropdown" data-target="#"><wr:Label context="lm2"/></a>
+													        <ul class="dropdown-menu" role="menu">
+													        	<wr:LandmarkMenu level="3" var="lm3">
+													        	<wr:Visible>
+													        		<li><wr:Link/></li>
+													        	</wr:Visible>
+													        	</wr:LandmarkMenu>
+													        </ul>
+													      </li>
+													[% } else { %]
+														<li><wr:Link/></li>
+													[% } %]
+													</wr:NonCurrent>
+												</wr:Visible>
+												</wr:LandmarkMenu>
+											</wr:Current>
+											<wr:NonCurrent>
+												<wr:LandmarkMenu level="2" var="lm2">
+												<wr:Visible>
+													<wr:NonCurrent>
+													  	[% if (getLandmarkChildren(lm2).size() > 0) { %]													
+															<li class="dropdown dropdown-submenu">
+														        <a href="<wr:URL context="lm2"/>" class="dropdown-toggle" data-toggle="dropdown" data-target="#"><wr:Label context="lm2"/></a>
+														        <ul class="dropdown-menu" role="menu">
+														        	<wr:LandmarkMenu level="3" var="lm3">
+														        		<wr:Visible>
+															        		<li><wr:Link/></li>
+															        	</wr:Visible>
+														        	</wr:LandmarkMenu>
+														        </ul>
+														      </li>
+														[% } else { %]
+															<li><wr:Link/></li>
+														[% } %]	
+													</wr:NonCurrent>
+												</wr:Visible>																			
+												</wr:LandmarkMenu>
+											</wr:NonCurrent>
+										</ul>
+									</li>
+							[% } else { %]
+								<wr:Current>
+									<li class="active"><a href="<wr:URL/>"><wr:Label/></a></li>
+								</wr:Current>
+								<wr:NonCurrent>
+									<li><a href="<wr:URL/>"><wr:Label/></a></li>
+								</wr:NonCurrent>
+							[% } %]
+						</wr:Visible>
+						</wr:LandmarkMenu>
+		            </ul>
+		            <div class="user-location">
+		            	<wr:CustomLocation name="User"/>
+		            </div>
+				</div>
+			</div>
+		</div>
+	</nav>
+	<div class="page-header">
+		<div class="container[%= (pageFluid) ? "-fluid" : "" %][%= (params["navbar-type"] == "fixed-top") ? " container-fixed-top-padding" : " container-top-padding"%]">
+			<div class="row">
+				<a class="logo" href="[% if (homePage) {%]<wr:Id context="homePage"/>.do[% } else {%]index.jsp[% } %]"><span class="sr-only">[%= StringEscapeUtils.escapeHtml(params["application-name"]) %]</span></a>
+			</div>
+			[% if (showBreadcrumb) { %]
+			<div class="row">
+				<ol class="breadcrumb" aria-label="breadcrumbs">
+					<wr:NavigationBar>
+					 <li><wr:Link/></li>
+					</wr:NavigationBar>
+					<li class="active"><wr:Label context="page"/></li>
+				</ol>
+			</div>
+			[% } %]
+		</div>
+	</div>
+	<div class="container[%= (pageFluid) ? "-fluid" : "" %] main-grid">
+		<div class="row">
+			[% if (showLeftColumn || secondLevelLeft) { %]
+			<div class="col-md-3 left-column" role="region">
+				[% if (secondLevelLeft) {%]
+				<wr:LandmarkMenu var="lm" level="1">
+				<wr:Visible>
+					<wr:Current>
+					[% if (getLandmarkChildren(lm).size() > 0) { %]
+						<div class="panel panel-default landmark">
+							<div class="panel-heading">
+							<wr:Label/>
+							</div>
+							<div class="list-group" role="menu" id="left-landmark">
+							<wr:LandmarkMenu level="2" var="lm2" varIndex="index2">
+							<wr:Visible>
+								<wr:Current>
+									[% if (getLandmarkChildren(lm2).size() > 0) { %]													
+										<a class="list-group-item active" data-toggle="collapse" data-parent="#left-landmark" href="#lm-[%= index2 %]"><wr:Label context="lm2"/><span class="caret"></span></a>
+								        <div class="list-group collapse in" role="menu" id="lm-[%= index2 %]">
+								        	<wr:LandmarkMenu level="3" var="lm3">
+								        	<wr:Visible context="lm3">
+								        		<wr:Current>
+								        			<wr:Link context="lm3" class="list-group-item active"/>
+								        		</wr:Current>
+												<wr:NonCurrent>
+													<wr:Link context="lm3" class="list-group-item"/>													  
+												</wr:NonCurrent>
+											</wr:Visible>
+								        	</wr:LandmarkMenu>
+								        </div>
+									[% } else { %]
+									<wr:Link class="list-group-item active"/>
+									[% } %]
+								</wr:Current>
+								<wr:NonCurrent>
+									[% if (getLandmarkChildren(lm2).size() > 0) { %]													
+										<a class="list-group-item" data-toggle="collapse" data-parent="#left-landmark" href="#lm-[%= index2 %]"><wr:Label context="lm2"/><span class="caret"></span></a>
+								        <div class="list-group collapse" role="menu" id="lm-[%= index2 %]">
+								        	<wr:LandmarkMenu level="3" var="lm3">
+								        		<wr:Visible context="lm3">
+									        		<wr:Link context="lm3" class="list-group-item"/>
+									        	</wr:Visible>
+								        	</wr:LandmarkMenu>
+								        </div>
+									[% } else { %]
+									<wr:Link class="list-group-item"/>
+									[% } %]
+								</wr:NonCurrent>
+							</wr:Visible>
+							</wr:LandmarkMenu>
+							</div>
+						</div>
+					[% } %]
+					</wr:Current>
+				</wr:Visible>
+				</wr:LandmarkMenu>
+				[% } %]
+				<wr:CustomLocation name="Left"/>
+			</div>
+			[% } %]
+			[% if (showLeftColumn & showRightColumn) { %]
+			<div class="col-md-6">
+			[% } else if ((showLeftColumn || secondLevelLeft) ^ showRightColumn) { %]
+			<div class="col-md-9">
+			[% } else { %]
+			<div class="col-md-12">
+			[% } %]
+				[% if (showPageTitle || page.selectSingleNode("layout:CustomLocation[@name='Page Links']") != null) { %]
+				<div class="page-title">
+					[% if (page.selectSingleNode("layout:CustomLocation[@name='Page Links']") != null) { %]
+			  		<div class="pull-right page-links">
+			  			<wr:CustomLocation name="Page Links"/>
+					</div>
+					[% } %]
+					[% if (showPageTitle) { %]
+						<h1><wr:Label context="page"/></h1>
+					[% } %]
+				</div>
+				[% } %]
+				<wr:CustomLocation name="Top"/>
+				<div id="main-content" role="main">
+				<wr:Grid/>
+				</div>
+			</div>
+			[% if (showRightColumn) { %]
+			<div class="col-md-3 right-column" role="region">
+				<wr:CustomLocation name="Right"/>
+			</div>
+			[% } %]
+		</div>
+		
+	</div>
+</div>
+	<footer class="footer-bottom" role="contentinfo">
+		<div class="container[%= (pageFluid) ? "-fluid" : "" %]">
+			<div class="row">
+				<div class="col-md-12">
+					<a href="#main-nav" title="Back to top" class="back-top pull-right btn btn-primary btn-lg"><span class="glyphicon glyphicon-chevron-up"></span><span class="sr-only">Back to top</span></a>
+					<img class="footer-logo" src="MetroStyle/img/logo.png" alt="[%= StringEscapeUtils.escapeHtml(params["application-name"]) %]"/>
+					<p class="footer-info">Generated by <a href="http://www.webratio.com" target="_blank" title="High Productivity Web and Mobile App Dev Platform">WebRatio<sup>&reg;</sup></a></p>
+				</div>
+			</div>
+		</div>
+	</footer>
+</wr:PageForm>
+</body>
+</html>

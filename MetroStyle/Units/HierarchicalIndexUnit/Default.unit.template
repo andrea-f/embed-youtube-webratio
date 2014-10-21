@@ -1,0 +1,366 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter label="Show Header" name="show-header" type="boolean" default="true">
+Defines the rendition of the header on the top.
+Allowed values are: true (default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Show Sub Level Header" name="show-sub-level-header" type="boolean" default="true">
+Defines the rendition of the header on the top of sub levels.
+Allowed values are: true (default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use Alternate Rows" name="use-alternate" type="boolean" default="true">
+Defines the usage of alternates colours for each line.
+Allowed values are: true or false(default).
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Compact table" name="compact" type="boolean" default="false">
+Makes tables more compact by cutting cell padding in half.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Links Position" name="link-position" type="enum" values="left|right|on_row" default="right">
+Defines the rendition of the sub levels links.
+Allowed values are:
+- right (default): places the links on the right
+- left: places the links on the left
+- on_row: places the first link on the attributes
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Scrolling Position" name="scrolling-position" type="enum" values="top|bottom|both" default="bottom">
+Defines where to position the scroll links.
+Allowed values are:
+- top (default): places the links at the top
+- bottom: places the links at the bottom
+- both: places the links at the top and bottom
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Scrolling Alignment" name="scrolling-alignment" type="enum" values="left|center|right" default="center">
+Defines the alignment of the scroll links.
+Allowed values are:
+- left (default)
+- center
+- right
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use Empty Unit Message" name="use-empty-unit-message" type="boolean" default="false">
+Defines the usage of a message for empty units.
+Allowed values are: true(default) or false.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Empty Unit Message" name="empty-unit-message" type="string" default="emptyUnitMessage">
+Defines the key of the message to use if the unit is empty.
+Default value: emptyUnitMessage
+</wr:LayoutParameter>
+
+[%
+import org.apache.commons.lang.StringUtils
+
+setHTMLOutput()
+
+def showHeader = params["show-header"]
+def useAlternate = params["use-alternate"]
+def compact = params["compact"]
+def linkPosition = params["link-position"]
+def scrollingPosition = params["scrolling-position"]
+def useEmptyUnitMessage = params["use-empty-unit-message"]
+def emptyUnitMessage = params["empty-unit-message"]
+
+def position = "level1"
+def rootFirstLink = unit.selectSingleNode("layout:Link[string(@sort) != 'true' and string(@scroll) != 'true']")
+def rootFirstLinkId = rootFirstLink?.valueOf("@link")
+
+def colSpan = unit.selectNodes("layout:Attribute").size() + unit.selectNodes("layout:Link[string(@sort) != 'true' and string(@scroll) != 'true']").size()
+    if (linkPosition == "on_row" && rootFirstLink) {
+       colSpan--
+    }
+
+def isScrollable = unit["blockFactor"] != "" ? "true": "false"
+def isSortable = unit["sortable"]
+
+def printPagination() { 
+	def blockFactor = unit["blockFactor"]
+	def scrollingAlignment = "text-" + params["scrolling-alignment"]
+	def firstLink = unit.selectSingleNode("layout:Link[contains(@link,'First')]")
+	def previousLink = unit.selectSingleNode("layout:Link[contains(@link,'Previous')]")
+	def blockLink = unit.selectSingleNode("layout:Link[contains(@link,'Block')]")
+	def nextLink = unit.selectSingleNode("layout:Link[contains(@link,'Next')]")
+	def lastLink = unit.selectSingleNode("layout:Link[contains(@link,'Last')]")
+%]
+	<c:if test="${<wr:Id context="unit"/>.scroller.of gt [%= blockFactor %]}">
+	   <div class="[%= scrollingAlignment %]">
+	   <ul class="pagination">
+			[% if (firstLink) { %]
+		        <c:choose>
+		            <c:when test="${<wr:Id context="unit"/>.scroller.current ne <wr:Id context="unit"/>.scroller.first}">
+	     	            <li><wr:Link class="scroll" context="firstLink"/></li>
+		            </c:when>
+		            <c:otherwise>
+	     	            <li class="disabled" ><wr:Link class="scroll" context="firstLink"/></li>
+	           		</c:otherwise>
+		        </c:choose>
+		    [% } %]
+		    [% if (previousLink) { %]
+		        <c:choose>
+	                <c:when test="${<wr:Id context="unit"/>.scroller.current ne <wr:Id context="unit"/>.scroller.previous}">
+	     	            <li><wr:Link class="scroll" context="previousLink"/></li>
+	                </c:when>
+	                <c:otherwise>
+	     	            <li class="disabled" ><wr:Link class="scroll" context="previousLink"/></li>
+		           	</c:otherwise>
+	            </c:choose>
+		    [% } %]
+		   [% if (blockLink) {%]
+		    <c:forEach var="current" varStatus="status" items="${<wr:Id context="unit"/>.scroller.blocks}">
+		      <c:set var="index" value="${status.index}"/>
+		      <c:choose>
+		        <c:when test="${current ne <wr:Id context="unit"/>.scroller.current}">
+     	            <li><a class="<wr:StyleClass context="blockLink"/> link" href="<wr:URL context="blockLink"/>"  onclick="<wr:AjaxURL context="blockLink" />">${current}</a></li>
+		        </c:when>
+		        <c:otherwise>
+     	            <li class="active" ><span class="<wr:StyleClass context="blockLink"/> link">${current} <span class="sr-only">(current)</span></span></li>
+		        </c:otherwise>
+		      </c:choose>
+	    	</c:forEach> 
+		    [% } %]
+		    [% if (nextLink) { %]
+		        <c:choose>
+	                <c:when test="${<wr:Id context="unit"/>.scroller.current ne <wr:Id context="unit"/>.scroller.next}">
+	     	            <li><wr:Link class="scroll" context="nextLink"/></li>
+		            </c:when>
+    	            <c:otherwise>
+	     	            <li class="disabled" ><wr:Link class="scroll" context="nextLink"/></li>
+    	            </c:otherwise>
+    	        </c:choose>
+		    [% } %]
+		    [% if (lastLink) { %]
+		    	<c:choose>
+		            <c:when test="${<wr:Id context="unit"/>.scroller.current ne <wr:Id context="unit"/>.scroller.last}">
+	     	            <li><wr:Link class="scroll" context="lastLink"/></li>
+	                </c:when>
+	                <c:otherwise>
+	     	            <li class="disabled" ><wr:Link class="scroll" context="lastLink"/></li>
+	               </c:otherwise>
+	            </c:choose>
+		    [% } %]
+	    </ul>
+	    </div>
+	</c:if>
+[% } %]
+[% // iterates recursively on the hierarchicalLevels
+   def getSubLevelsLayout(hLevel, position, levelCount) {
+   	def showSubLevelHeader = params["show-sub-level-header"]
+	def useAlternate = params["use-alternate"]
+	def compact = params["compact"]
+	def linkPosition = params["link-position"]
+	def levelId = hLevel["id"]
+	def currentLevel = "level" + levelCount + "current"
+	position = position + ",level" + levelCount
+	def atts = hLevel.selectNodes("layout:Attribute")
+	def links = hLevel.selectNodes("layout:Link")
+	def levelFirstLink = hLevel.selectSingleNode("layout:Link[1]")
+	def levelColSpan = atts.size() + links.size()
+    if (linkPosition == "on_row" && links.size() > 0) {
+       levelColSpan--
+    }
+%]
+    
+      			<div class="table-responsive">
+				<table class="table table-bordered table-hover [% if (compact == "true") { %] table-condensed[% } %][% if (useAlternate == "true") { %] table-striped[% } %]">
+					[% if (showSubLevelHeader == "true") {%]
+					<thead>
+						<tr>
+						[% if (linkPosition == "left") { %]
+							<wr:Iterate var="l" context="hLevel" select="layout:Link">
+								<wr:Visible><th scope="col" class="<wr:StyleClass/> smallcol"></th></wr:Visible>
+							</wr:Iterate>
+						[% }  %]
+						<wr:Iterate var="att" context="hLevel" select="layout:Attribute">
+						<wr:Visible>
+					        <th scope="col" class="<wr:StyleClass/>">
+						     	<wr:Label/>
+					        </th>
+					    </wr:Visible>
+					    </wr:Iterate>
+						<wr:Iterate var="l" context="hLevel" select="layout:Link">
+							[% if (linkPosition == "right" || ((linkPosition == "on_row") && index > 0)) { %]
+								<wr:Visible><th scope="col" class="<wr:StyleClass/> smallcol"></th></wr:Visible>
+							[% } %]
+						</wr:Iterate>	
+						</tr>
+					</thead>
+					[% } %]
+					<tbody>
+				      <c:forEach items="${level[%=levelCount -1 %]current.[%=levelId%]data}" var="level[%=levelCount%]current" varStatus="level[%=levelCount%]status">
+					   	   <c:set var="level[%=levelCount%]" value="${level[%=levelCount%]status.index}" />
+						   <tr>
+						   		[% if (linkPosition == "left") { %]
+								<wr:Iterate var="l" context="hLevel" select="layout:Link">
+									<wr:Visible>
+									<td class="<wr:StyleClass/> smallcol">
+										<wr:Link position="position"/>
+									</td>
+									</wr:Visible>
+								</wr:Iterate>
+								[% } %]
+							  <wr:Iterate var="attr" context="hLevel" select="layout:Attribute">
+							   	 <wr:Visible>
+							   	 <td class="<wr:StyleClass/> value [%= attr["type"]%]">
+							   	 <wr:Visible position="position">
+							  	    [% if (levelFirstLink != null && linkPosition == "on_row") {%]
+							  	        <wr:Visible context="levelFirstLink" position="position">
+										  <a href="<wr:URL context="levelFirstLink" position="position"/>" class="<wr:StyleClass context="levelFirstLink"/>" [%if (levelFirstLink?.attributeValue("newWindow") == "true") { %] target="_blank" [% } %] onclick="<wr:AjaxURL context="levelFirstLink"  position="position"/>">
+										</wr:Visible>
+									[% } %]
+										  <wr:Value item="currentLevel" position="position"/>
+									[% if (levelFirstLink != null && linkPosition == "on_row") {%]
+										<wr:Visible context="levelFirstLink" position="position">
+										  </a>
+										</wr:Visible>
+									[% } %]
+									</wr:Visible>
+								 </td>
+								 </wr:Visible>
+							  </wr:Iterate>
+							  <wr:Iterate var="link" context="hLevel" select="layout:Link">
+							    [% if (linkPosition == "right" || (linkPosition == "on_row" && index > 0)) { %]
+							    <wr:Visible>
+							    <td class="<wr:StyleClass/> smallcol">
+									<wr:Link position="position"/>
+								</td>
+								</wr:Visible>
+								[% } %]
+							  </wr:Iterate>
+						  </tr>
+						<wr:Iterate var="subLevel" context="hLevel" select="HierarchicalIndexLevel">
+							<c:if test="${not empty(level[%=levelCount%]current.<wr:Id context="subLevel"/>data)}">
+							<tr>
+								<td colspan="[%= levelColSpan %]">[% getSubLevelsLayout(subLevel, position, levelCount + 1) %]</td>
+							</tr>
+							</c:if>
+						</wr:Iterate>
+					</c:forEach>
+				</tbody>
+			</table>
+			</div>	
+[% } %]
+
+
+[% if (useEmptyUnitMessage != "true") { %]
+<c:if test="${not(empty <wr:Id context="unit"/>) and (<wr:Id context="unit"/>.dataSize gt 0)}">
+[% } else { %]
+<c:choose>
+<c:when test="${not(empty <wr:Id context="unit"/>) and (<wr:Id context="unit"/>.dataSize gt 0)}">
+[% } %]
+	<wr:Frame>
+		<div class="plain <wr:StyleClass/>">
+			<div class="plain HierarchicalIndexUnit">
+			    [% if (isScrollable == "true" && (scrollingPosition == "top" || scrollingPosition == "both")) { %]
+					[% printPagination() %]
+				[% } %]
+                <div class="table-responsive">
+				<table class="table table-bordered table-hover [% if (compact == "true") { %] table-condensed[% } %][% if (useAlternate == "true") { %] table-striped[% } %]">
+					[% if (showHeader == "true") {%]
+					<thead>
+						<tr>
+						[% if (linkPosition == "left") { %]
+							<wr:Iterate var="l" context="unit" select="layout:Link[string(@sort) != 'true' and string(@scroll) != 'true']">
+								<wr:Visible><th scope="col" class="<wr:StyleClass/> smallcol"></th></wr:Visible>
+							</wr:Iterate>
+						[% }  %]
+						<wr:Iterate var="att" context="unit" select="layout:Attribute">
+						<wr:Visible>
+					        <th scope="col" class="<wr:StyleClass/>">
+					        [% if (isSortable == "true") { %]
+					         [% def sortLink = unit.selectSingleNode("layout:Link[@link='" + unit["id"] + att["attribute"] + "']")
+						         if(sortLink != null) { %]
+						            <wr:Link context="sortLink" class="sort" type="sort"/>
+						         [% } else { %]
+						            <wr:Label/>
+						         [% } %]
+						     [% } else { %]
+						     	<wr:Label/>
+						     [% } %]
+					        </th>
+					    </wr:Visible>
+					    </wr:Iterate>
+						<wr:Iterate var="l" context="unit" select="layout:Link[string(@sort) != 'true' and string(@scroll) != 'true']">
+							[% if (linkPosition == "right" || ((linkPosition == "on_row") && index > 0)) { %]
+								<wr:Visible><th scope="col" class="<wr:StyleClass/> smallcol"></th></wr:Visible>
+							[% } %]
+						</wr:Iterate>	
+						</tr>
+					</thead>
+					[% } %]
+					<tbody>
+					<c:forEach var="level1current" varStatus="level1status" items="${<wr:Id context="unit"/>.data}">
+						<c:set var="level1" value="${level1status.index}" />
+						<tr <c:if test="${<wr:Id context="unit"/>.currentIndex eq level1}">class="info"</c:if>>
+				      		[% if (linkPosition == "left") { %]
+								<wr:Iterate var="l" context="unit" select="layout:Link[string(@sort) != 'true' and string(@scroll) != 'true']">
+									<wr:Visible>
+									<td class="<wr:StyleClass/> smallcol">
+										<wr:Link position="position"/>
+									</td>
+									</wr:Visible>
+								</wr:Iterate>
+							[% } %]
+							<wr:Iterate var="attr" context="unit" select="layout:Attribute">
+								<wr:Visible>
+								<td class="<wr:StyleClass/> [%=attr["type"]%]">
+								[% if ((linkPosition == "on_row") && (rootFirstLink)) {%]
+									<wr:Visible position="position">
+										<wr:Visible context="rootFirstLink" position="position">
+											<a href="<wr:URL context="rootFirstLink" position="position"/>" class="<wr:StyleClass context="rootFirstLink"/>" onclick="<wr:AjaxURL context="rootFirstLink" position="position" />">
+										</wr:Visible>
+										<wr:Value item="'level1current'" position="position"/>
+										<wr:Visible context="rootFirstLink" position="position">
+											</a>
+										</wr:Visible>
+									</wr:Visible>
+								[% } else {%]
+										<wr:Value item="'level1current'" position="position"/>
+								[% } %]
+								</td>
+								</wr:Visible>
+							</wr:Iterate>
+						   <wr:Iterate var="l" context="unit" select="layout:Link[string(@sort) != 'true' and string(@scroll) != 'true']">
+							   	[% if (linkPosition == "right" || (linkPosition == "on_row" && index > 0)) { %]
+							   		<wr:Visible>
+							   		<td class="<wr:StyleClass/> smallcol">
+										<wr:Link position="position"/>
+									</td>
+									</wr:Visible>
+								[% } %]
+						   </wr:Iterate>
+						</tr>
+						
+						
+						<wr:Iterate var="hLevel" context="unit" select="HierarchicalIndexLevel">
+							<c:if test="${not empty(level1current.<wr:Id context="hLevel"/>data)}">
+							<tr>
+								<td colspan="[%= colSpan %]">[% getSubLevelsLayout(hLevel, "level1", 2) %]</td>
+							</tr>
+							</c:if>
+							
+						</wr:Iterate>
+					</c:forEach>
+					</tbody>
+				</table>
+				</div>
+				[% if (isScrollable == "true" && (scrollingPosition == "bottom" || scrollingPosition == "both")) { %]
+					[% printPagination() %]
+				[% } %]
+			</div>
+		</div>
+	</wr:Frame>
+[% if (useEmptyUnitMessage != "true") { %]
+</c:if>
+[% } else { %]
+</c:when>
+<c:otherwise>
+	<wr:Frame>
+		<div class="plain <wr:StyleClass/>">
+			<div class="plain HierarchicalIndexUnit">
+				<table>
+				    <tr>
+				      <td><bean:message key="[%printJSPTagValue(emptyUnitMessage)%]"/></td>
+				    </tr>
+				</table>
+			</div>
+		</div>
+	</wr:Frame>
+</c:otherwise>
+</c:choose>
+[% } %]  

@@ -1,0 +1,152 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter label="Event style" name="event-style" type="enum" values="default|primary|info|success|warning|danger" default="default">
+Defines the color style of the event. 
+Allowed values are:
+- default (default)
+- primary
+- info
+- success
+- warning
+- danger
+</wr:LayoutParameter>
+[%
+import org.apache.commons.lang.math.NumberUtils
+import org.apache.commons.lang.StringUtils
+
+setHTMLOutput()
+def years = NumberUtils.toInt(unit["years"], 5)
+def eventStyle = params["event-style"]
+%]
+<wr:Frame>
+<div class="plain <wr:StyleClass/>">
+	<div class="plain bs-calendar">
+		<div class="bsc-top">
+			<div class="btn-group">
+			  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			    <c:out value="${<wr:Id context="unit"/>.monthNames[<wr:Id context="unit"/>.currentMonth]}"/> <span class="caret"></span>
+			  </button>
+			  <ul class="dropdown-menu" role="menu">
+			  	<wr:Iterate var="link" context="unit" select="layout:Link[contains(@id, '-month-')]">
+	              [% def month = NumberUtils.toInt(link.valueOf("LinkParameter/@sourceValue")) %]
+	              <li<c:if test="${<wr:Id context="unit"/>.currentMonth eq '[%= month%]'}"> class="active"</c:if>>
+	              	<a href="<wr:URL context="link"/>">
+					<c:out value="${<wr:Id context="unit"/>.monthNames[[%= month%]]}"/>
+					</a>
+	              </li>
+	            </wr:Iterate>
+			  </ul>
+			</div>
+			[% def yearLink = unit.selectSingleNode("layout:Link[contains(@id, '-year')]") %]
+			<ul class="pagination pull-right">
+		    	<c:set var="index" value="0"/>
+	    		<li><a href="<wr:URL context="yearLink"/>">&laquo;</a></li>
+	            <c:forEach var="current" varStatus="status" items="${<wr:Id context="unit"/>.years}" begin="1" end="[%= years%]">
+	              <c:set var="index" value="${status.index}"/>
+	              <li<c:if test="${current eq <wr:Id context="unit"/>.currentYear}"> class="active"</c:if>>
+	              	<a class="<wr:StyleClass context="yearLink"/> link" href="<wr:URL context="yearLink"/>"><c:out value="${current}"/></a>
+	              </li>
+	            </c:forEach>
+	            <c:set var="index" value="${index + 1}"/>
+	            <li><a href="<wr:URL context="yearLink"/>">&raquo;</a></li>    
+			</ul>
+		</div>
+		<div class="bsc-calendar">
+		  <div class="bsc-day-header">
+		    <c:forEach var="dayNamecurrent" varStatus="dayNamestatus" items="${<wr:Id context="unit"/>.dayOfWeekNames}">
+	         <div class="bsc-day-name"><c:out value="${dayNamecurrent}"/></div>
+            </c:forEach>
+		  </div>
+		  <div class="bsc-week">
+          <c:set var="fwday" value="${<wr:Id context="unit"/>.daysOfWeek[0]}"/>
+          <c:if test="${fwday != 1}">
+            <c:forEach begin="1" end="${fwday-1}">
+              <div class="bsc-day disabled"></div>
+            </c:forEach>
+          </c:if>
+          <c:forEach var="level1current" varStatus="level1status" items="${<wr:Id context="unit"/>.date}">
+             <c:set var="level1" value="${level1status.index}"/>
+             <c:set var="wday" value="${<wr:Id context="unit"/>.daysOfWeek[level1]}"/>
+             <div class="bsc-day<c:if test="${level1current.date eq <wr:Id context="unit"/>.currentDate}"> active</c:if>">
+		                  
+                [% def outgoingLinks = unit.selectNodes("layout:Link[LinkParameter[string(@_exp) != 't'][@source = 'date[].date'] and not(LinkParameter[starts-with(@source, 'date[].data[].')])][string(@_exp) != 't']") %]
+                <div class="bsc-date clearfix">
+                [% if(outgoingLinks.size() == 1){ %]
+                    [% def lev1Link = outgoingLinks[0] %]
+                    <a class="<wr:StyleClass context="lev1Link"/> pull-right btn btn-default btn-sm" title="<wr:Label context="lev1Link"/>"  onclick="<wr:AjaxURL context="lev1Link" position="'level1'"/>" href="<wr:URL context="lev1Link" position="'level1'"/>">
+                      <fmt:formatDate value="${level1current.date}" pattern="d"/>
+                    </a>
+                [% } else if(outgoingLinks.size() > 1){ %]
+                	<div class="btn-group btn-group-sm pull-right">
+					  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					    <fmt:formatDate value="${level1current.date}" pattern="d"/>
+					  </button>
+					  <ul class="dropdown-menu dropdown-menu-right" role="menu">
+					   <wr:Iterate var="link" context="unit" select="layout:Link[LinkParameter/@source='date[].date']">
+					   <wr:Visible context="link" position="'level1'">
+					     <li><wr:Link context="link" position="'level1'" /></li>
+					   </wr:Visible>
+                       </wr:Iterate>
+					  </ul>
+					</div>
+                [% } else {%]
+                	<span class=" pull-right btn btn-default btn-sm"><fmt:formatDate value="${level1current.date}" pattern="d"/></span>
+                [% } %]
+                	
+                </div>
+		        <div class="bsc-events">                    
+                <c:if test="${level1current.dataSize gt 0}">
+                  <c:forEach var="level2current" varStatus="level2status" items="${level1current.data}">
+                    <c:set var="level2" value="${level2status.index}"/>
+                    [% def lev2Links = unit.selectNodes("layout:Link[not(LinkParameter) or LinkParameter[string(@_exp) != 't'][@source != 'date[].date']][string(@_exp) != 't']") %]
+                      [% if(lev2Links.size() == 1){%]
+                        <a class="<wr:StyleClass context="lev2Links[0]"/> btn btn-[%= eventStyle %] btn-xs btn-block" title="<wr:Label context="lev2Links[0]"/>" href="<wr:URL context="lev2Links[0]" position="'level1,level2'"/>"  onclick="<wr:AjaxURL context="lev2Links[0]" position="'level1,level2'"/>">
+                      [% } else if(lev2Links.size() > 1){%]
+                        <div class="btn-group btn-group-xs btn-block">
+					  		<button type="button" class="btn btn-[%= eventStyle %] btn-block dropdown-toggle" data-toggle="dropdown">
+                      [% } else { %]
+                        <div class="btn btn-[%= eventStyle %] btn-xs btn-block">
+                      [% } %]
+                      <wr:Iterate var="attr" context="unit" select="layout:Attribute">
+                        <span class="<wr:StyleClass/> hidden-xs">
+                            <wr:Value item="'level2current'" position="'level1,level2'"/>
+                        </span>
+                      </wr:Iterate>
+                      [% if(lev2Links.size() == 1){%]
+                        </a>
+                      [% } else if(lev2Links.size() > 1){%]
+                   		  <span class="caret"></span> </button>
+				  		  <ul class="dropdown-menu<c:if test="${wday ge 5}"> dropdown-menu-right</c:if>" role="menu">
+					   		[% for(link in lev2Links){ %]
+					   		<wr:Visible context="link" position="'level1'">
+					     		<li><wr:Link context="link" position="'level1'" /></li>
+					   		</wr:Visible>
+                       		[% } %]
+						  </ul>
+						</div>
+                      [% } else { %]
+                        </div>
+                      [% } %]
+                     
+                  </c:forEach>
+                </c:if>
+                </div>
+			</div>
+            <c:if test="${wday == 7}">
+            	</div>
+                <c:if test="${not level1status.last}">
+                  <div class="bsc-week">
+                </c:if>
+            </c:if>
+          </c:forEach>
+          <c:set var="size" value="${<wr:Id context="unit"/>.datesSize}"/>
+          <c:set var="lwday" value="${<wr:Id context="unit"/>.daysOfWeek[size-1]}"/>
+          <c:if test="${lwday != 7}">
+            <c:forEach begin="${lwday + 1}" end="7">
+              <div class="bsc-day disabled"></div>
+            </c:forEach>
+            </div>
+          </c:if>
+       </div>
+	</div>
+  </div>
+</wr:Frame>

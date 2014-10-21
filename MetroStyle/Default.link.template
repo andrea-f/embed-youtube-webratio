@@ -1,0 +1,183 @@
+#?delimiters [%, %], [%=, %]
+<wr:LayoutParameter label="Custom ID"  name="custom-id" type="string">
+Specifies a custom value for the "id" attribute of the generated
+HTML link. This overrides any identifier that is usually generated.
+Defaults to the link ID (for normal links) or "button:" followed by link ID (for button links).
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Link style" name="link-style" type="enum" values="normal|button" default="normal">
+Defines the style of the link. 
+Allowed values are:
+- normal (default)
+- button
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Link size" name="link-size" type="enum" values="lg|normal|sm|xs" default="normal">
+Defines the size of the link or button. 
+Allowed values are:
+- lg -> large
+- normal (default)
+- sm -> small
+- xs -> mini
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Button style" name="btn-style" type="enum" values="default|primary|info|success|warning|danger" default="default">
+Defines the style of the link. 
+Allowed values are:
+- normal (default)
+- button
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Button block" name="btn-block" type="boolean" default="false">
+Defines if render a block button, those that span the full width of a parent.
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Show" name="show" type="enum" values="text|icon|icon &amp; text|text &amp; icon" default="text">
+Defines the content of the link.
+Allowed values are:
+- text (default)
+- icon & text
+- text & icon
+- icon
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Icon class" name="icon-class" type="string">
+Defines the css class to render the icon.
+The class should be "glyphicons-icon-name" (ie: glyphicon-calendar)
+See the list of available icons at getbootstrap.com/components/#glyphicons-glyphs
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Use Confirm Dialog" name="confirmation" type="boolean" default="false">
+Defines if a confirmation dialog has to be shown before the link is navigated. 
+Allowed values are:
+- true 
+- false (default)
+</wr:LayoutParameter>
+<wr:LayoutParameter label="Confirm Message Key" name="confirm-message" type="string" default="linkConfirmMessage">
+Defines the message to show to the user in the confirmation dialog. It is a key that has also to be added in the Localization dialog.
+</wr:LayoutParameter>
+[%
+	import org.apache.commons.lang.StringUtils
+	import org.apache.commons.lang.StringEscapeUtils
+	import java.io.File
+
+	def unitId = link.selectSingleNode("ancestor::layout:Unit")?.valueOf("@unitId")
+	if (unitId == "") {
+		unitId = link["unitId"]
+	} 
+	
+	if (((type == "") || (type == "-ajax")) && (link["unitId"] != "")) {  // link individually placed
+	     type = (isFormBased(getById(link["unitId"])) ? "button" : "") + type
+	}
+	def isAjax = isAjaxLink(link)
+	def formBean = getFormBeanName(page)
+	
+	def htmlId = StringUtils.defaultIfEmpty(params["custom-id"], getLinkId(link))
+	def htmlButtonId = StringUtils.defaultIfEmpty(params["custom-id"], "button:" + getLinkId(link))
+	def sortAtt = StringUtils.substringAfter(link["link"], unitId)
+	def linkStyle = params["link-style"]
+	def linkSize = (params["link-size"] != "normal") ? " text-" + params["link-size"] : ""
+	def show = params["show"]
+	def btnStyle = ((linkStyle == "button" || type == "button") && "sort" != type) ? " btn-" + params["btn-style"] : ""
+	def btnSize = (params["link-size"] != "normal" && (linkStyle == "button" || type == "button") && "sort" != type) ? " btn-" + params["link-size"] : ""
+	def btnBlock = (params["btn-block"] == "true" && (linkStyle == "button" || type == "button") && "sort" != type) ? " btn-block" : ""
+	def iconClass = "glyphicon " + params["icon-class"]
+	def useImage = (show == "icon" || show == "icon & text" || show == "text & icon") ? (StringUtils.isNotBlank(iconClass)) : false
+	
+
+	def cssClass = linkSize
+	if ("button" == type || linkStyle == "button") {
+			cssClass = "btn " + btnStyle + btnSize + btnBlock	
+	}
+	
+	def confirmation = params["confirmation"]	
+	def confirmMessage = params["confirm-message"]
+	def targetPage = getAncestorTopLevelPage(getById(link["to"]))
+	
+%]
+[% if (confirmation == "true") { %]
+	<c:set var="_wr_message"><bean:message key="[%printJSPTagValue(confirmMessage)%]"/></c:set>
+	<% pageContext.setAttribute("_wr_message", org.apache.commons.lang.StringEscapeUtils.escapeJavaScript((String) pageContext.getAttribute("_wr_message")));%>
+[% } %]
+[%
+	def getAlternativeText() {
+		if (link["alternativeText"] != "") {
+			if (isLocalizedAncestorOrSelf(link)) {
+	   			return "<bean:message key=\"" + getJSPTagValue(link["alternativeText"]) +  "\"/>"
+			} else { 
+			  return link["alternativeText"]
+			} 
+		}
+		if (isLocalizedAncestorOrSelf(link)) {
+   			return "<bean:message key=\"" + getJSPTagValue(getTitle(link)) +  "\"/>"
+		} else { 
+		  return getTitle(link)
+		} 
+	}
+
+%]
+[% if (type.contains("-ajax")) { 
+	if (isAjax) { %]
+		return [% printRaw(getAjaxRequestCall(link, position)) %]
+	[% }
+ } else {
+ 
+ def disableCond =  getDisableCondition(link, position)
+ def visibility = StringUtils.defaultIfEmpty(getVisibilityPolicy(getById(link["to"])), "hide")
+ def isProtected = isProtectedAncestorOrSelf(getById(link["to"]))
+ 
+ if (isProtected || disableCond != null) {
+     if (isProtected && visibility == "hide" && disableCond == null) { %]
+		<c:if test="${webratio:isTargetAccessible('[%=getLinkId(link)%]', pageContext)}">
+	 [% } else if (isProtected && visibility == "hide" && disableCond != null) { %]
+		<c:choose>
+	       <c:when test="${not(webratio:isTargetAccessible('[%=getLinkId(link)%]', pageContext))}"/>
+	       <c:when test="${not([%printJSPTagValue(disableCond)%])}">
+	 [% } else if (visibility == "inactive" || disableCond != null) { %]
+	    [% def conds = []
+	       if(isProtected && visibility != "always"){
+	        conds.add("webratio:isTargetAccessible('" + getLinkId(link) + "', pageContext)")
+	       }
+	       if(disableCond != null){
+	         conds.add("not(" + disableCond + ")")
+	       }
+	    %]
+	    <c:choose>
+	       <c:when test="${[%printJSPTagValue(conds.join(" and "))%]}">
+	 [% } 
+ }%]
+ 	[% if ("button" == type) { %]
+ 		[% if (isAjax) { %]
+ 			<button title="[%= getAlternativeText() %]" onclick="[% if (confirmation == "true") { %] var c = confirm('<c:out value="${_wr_message}"/>'); if (c) { [% } %]return [% printRaw(getAjaxRequestCall(link, position)) %] [% if (confirmation == "true") { %] } else  { $('#[%= escapeCSS(formBean) %]')[0].target='_self' }  return c; [% } %]" class="[%= cssClass %] [%= styleClass %]" id="[%= htmlButtonId %]" name="button:[%= getLinkId(link) %]" type="submit" value="<wr:Label context="link"/>">
+			[% if (useImage && show != "text & icon") { %]<span class="[%= iconClass %]"></span> [% } %][% if (show != "icon") { %]<wr:Label context="link"/>[% } %][% if (useImage && show == "text & icon") { %] <span class="[%= iconClass %]"></span>[% } %]</button>
+ 		[% } else { %]
+			<button title="[%= getAlternativeText() %]" onclick="[% if (confirmation == "true") { %] var c = confirm('<c:out value="${_wr_message}"/>');  if (c) { [% } %][%if (link["newWindow"] == "true") { %] $('#[%= escapeCSS(formBean) %]')[0].target='_blank' [% } else { %]$('#[%= escapeCSS(formBean) %]')[0].target='_self'[% } %][% if (confirmation == "true") { %] }; return c; [% } %]" class="[%= cssClass %] [%= styleClass %]" id="[%= htmlButtonId %]" name="button:[%= getLinkId(link) %]" type="submit" value="<wr:Label context="link"/>">
+			[% if (useImage && show != "text & icon") { %]<span class="[%= iconClass %]"></span> [% } %][% if (show != "icon") { %]<wr:Label context="link"/>[% } %][% if (useImage && show == "text & icon") { %] <span class="[%= iconClass %]"></span>[% } %]</button>
+		[% } %]
+	[% } else { %]
+    	[% if (isAjax) { %]
+	 		<a title="[%= getAlternativeText() %]" id="[%= htmlId %]" onclick="[% if (confirmation == "true") { %] var c = confirm('<c:out value="${_wr_message}"/>'); if (c) { [% } %]return [% printRaw(getAjaxRequestCall(link, position)) %][% if (confirmation == "true") { %] }  return c; [% } %]" class="[%= cssClass %] [%= styleClass %]" href="<webratio:Link link="[%= getLinkId(link) %]" position="[%= position %]"/>">							
+	 	[% } else { %]
+	 		<a title="[%= getAlternativeText() %]" id="[%= htmlId %]" class="[%= cssClass %] [%= styleClass %]" href="<webratio:Link link="[%= getLinkId(link) %]" position="[%= position %]"/>"[%if (link["newWindow"] == "true") { %] target="_blank" [% } %] [% if (confirmation == "true") { %] onclick="return confirm('<c:out value="${_wr_message}"/>')"[% } %]>
+		[% } %]
+			[% if (useImage && show != "text & icon") { %]<span class="[%= iconClass %]"></span> [% } %][% if (show != "icon") { %]<wr:Label context="link"/>[% } %][% if (useImage && show == "text & icon") { %] <span class="[%= iconClass %]"></span>[% } %]</a>
+			  
+	[% } %]								
+ [% if (isProtected || disableCond != null) {
+ 	if (visibility == "inactive"  || disableCond != null) { %]
+     </c:when>
+	 <c:otherwise>
+	 	[% if ("button" == type) { %]
+ 		[% if (isAjax) { %]
+ 			<button disabled="disabled" title="[%= getAlternativeText() %]" class="disabled [%= cssClass %] [%= styleClass %]" id="[%= htmlButtonId %]" name="button:[%= getLinkId(link) %]" type="button">
+			[% if (useImage && show != "text & icon") { %]<span class="[%= iconClass %]"></span> [% } %][% if (show != "icon") { %]<wr:Label context="link"/>[% } %][% if (useImage && show == "text & icon") { %] <span class="[%= iconClass %]"></span>[% } %]</button>
+ 		[% } else { %]
+			<button disabled="disabled" title="[%= getAlternativeText() %]" class="disabled [%= cssClass %] [%= styleClass %]" id="[%= htmlButtonId %]" name="button:[%= getLinkId(link) %]" type="button">
+			[% if (useImage && show != "text & icon") { %]<span class="[%= iconClass %]"></span> [% } %][% if (show != "icon") { %]<wr:Label context="link"/>[% } %][% if (useImage && show == "text & icon") { %] <span class="[%= iconClass %]"></span>[% } %]</button>
+		[% } %]
+	[% } else { %]
+	 		<span title="[%= getAlternativeText() %]" id="[%= htmlId %]" class="disabled [%= cssClass %] [%= styleClass %]">
+			[% if (useImage && show != "text & icon") { %]<span class="[%= iconClass %]"></span> [% } %][% if (show != "icon") { %]<wr:Label context="link"/>[% } %][% if (useImage && show == "text & icon") { %] <span class="[%= iconClass %]"></span>[% } %]</span>
+			  
+	[% } %]
+	 </c:otherwise>
+  </c:choose>	 
+ [% } else if(visibility == "hide" && disableCond == null){ %]
+	</c:if>
+ [% } %]
+ [% } %]
+ [% } %]
+ 
