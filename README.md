@@ -6,3 +6,13 @@ This is a modification of the MetroStyle bootstrap template available from WebRa
 
 
 ![alt tag](http://s29.postimg.org/oq6odgo07/webratio_youtube_plugin_embed_metrostyle.png)
+
+
+Installation
+============
+1. In WebRatio open the store and search for HTML5
+2. Download the Metro Style template component
+3. Extract the repository in the same workspace as the main WebRatio project is
+4. Merge the repo content with the Metro Style folder
+5. Reopen WebRatio
+6. Make sure in the Layout of the main view(Top root in hierarchy on the top left) the template used is Metro Style
